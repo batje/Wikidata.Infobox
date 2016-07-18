@@ -1,0 +1,5 @@
+{{ debug this}}
+
+{{#each this}}
+<td>Picture {{this.mainsnak.datavalue.value}} <img src="https://commons.wikimedia.org/w/thumb.php?width=100&f={{this.mainsnak.datavalue.value}}"></td>
+{{/each}}

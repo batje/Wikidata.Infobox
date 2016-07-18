@@ -1,0 +1,14 @@
+{
+  "name": "post-render-bars",
+  "homepage": "https://github.com/ekuusela/post-render-bars",
+  "_release": "ce388695ed",
+  "_resolution": {
+    "type": "branch",
+    "branch": "master",
+    "commit": "ce388695edcdaba12a92b95d96e861625d6c317a"
+  },
+  "_source": "https://github.com/ekuusela/post-render-bars.git",
+  "_target": "*",
+  "_originalSource": "https://github.com/ekuusela/post-render-bars.git",
+  "_direct": true
+}

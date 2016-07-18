@@ -1,0 +1,28 @@
+{
+  "name": "Wikidata.Infobox",
+  "version": "0.0.1",
+  "main": "dist/Wikidata.Infobox.js",
+  "ignore": [
+    "docs",
+    "examples",
+    "lib",
+    "src",
+    "test",
+    ".gitignore",
+    ".npmgignore",
+    "README.md",
+    "package.json",
+    "bower.json"
+  ],
+  "dependencies": {
+    "jquery": "^3.0.0",
+    "requirejs": "^2.2.0",
+    "require-handlebars-plugin": "^1.0.0",
+    "handlebars": "^4.0.5",
+    "leaflet": "^1.0.0-rc.1",
+    "wikidata-sdk": "master",
+    "lodash": "^4.13.1",
+    "blueimp-gallery": "^2.21.2",
+    "post-render-bars": "https://github.com/ekuusela/post-render-bars.git"
+  }
+}

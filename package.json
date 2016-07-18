@@ -1,0 +1,63 @@
+{
+  "name": "Wikidata.Infobox",
+  "version": "0.0.1",
+  "description": "An Infobox framework for Wikidata items.",
+  "main": "src/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/batje/Wikidata.Infobox.git"
+  },
+  "keywords": [
+    "wikidata"
+  ],
+  "author": "Reinier Battenberg",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/batje/Wikidata.Infobox/issues"
+  },
+  "homepage": "https://github.com/batje/Wikidata.Infobox",
+  "dependencies": {
+    "nodemon": "^1.9.2",
+    "rollup": "^0.31.2",
+    "rollupify": "^0.3.1",
+    "sphericalmercator": "^1.0.5"
+  },
+  "devDependencies": {
+    "babel-preset-es2015-rollup": "^1.1.1",
+    "browserify": "~13.0.1",
+    "faucet": "0.0.1",
+    "rollup-plugin-babel": "^2.5.1",
+    "serve": "^1.4.0",
+    "tape": "4.5.1",
+    "testling": "~1.7.0",
+    "watchify": "3.7.0"
+  },
+  "testling": {
+    "scripts": "lib/Leaflet/leaflet-0.7.3/leaflet-src.js",
+    "files": "test/js/*.js",
+    "browsers": [
+      "ie/9..latest",
+      "chrome/22..latest",
+      "firefox/16..latest",
+      "safari/latest",
+      "opera/11.0..latest",
+      "iphone/6",
+      "ipad/6",
+      "android-browser/latest"
+    ]
+  },
+  "scripts": {
+    "start": "npm run watch & serve",
+    "watch": "npm run watch-js & npm run watch-handlebars",
+    "watch-js": "rollup -cw",
+    "watch-handlebars": "node node_modules/nodemon/bin/nodemon --watch templates/**.hbs --ext hbs --exec npm run handlebars",
+    "watchold": "watchify -t rollupify --debug -v -d src/index.js -o dist/Wikidata.Infobox.js",
+    "build2": "browserify -t rollupify --debug -d src/index.js -o dist/Wikidata.Infobox.js",
+    "build3": "rollup src/index.js --output=dist/Wikidata.Infobox.js",
+    "build": "npm run buildcode && npm run handlebars",
+    "buildcode": "rollup -c",
+    "handlebars": "handlebars -k -e hbs templates/** -f dist/Wikidata.Handlebars.js",
+    "production": "switch to rollup browserify -d src/index.js | uglifyjs -m -c --comments > dist/Wikidata.Infobox.min.js",
+    "test": "testling | faucet"
+  }
+}
