@@ -17,8 +17,16 @@
   },
   "homepage": "https://github.com/batje/Wikidata.Infobox",
   "dependencies": {
+    "jquery-accessible-dialog-tooltip-aria": "^1.0.5",
+    "jsdoc": "^3.4.0",
+    "julian": "^0.1.0",
+    "lodash-es": "^4.14.2",
     "nodemon": "^1.9.2",
+    "promised-handlebars": "^1.0.6",
+    "q": "git+ssh://git@github.com/FruitsofThought/q.git#v1",
     "rollup": "^0.31.2",
+    "rollup-plugin-commonjs": "^3.3.1",
+    "rollup-plugin-node-resolve": "^1.7.1",
     "rollupify": "^0.3.1",
     "sphericalmercator": "^1.0.5"
   },
@@ -27,6 +35,8 @@
     "browserify": "~13.0.1",
     "faucet": "0.0.1",
     "rollup-plugin-babel": "^2.5.1",
+    "rollup-plugin-commonjs": "^3.3.1",
+    "rollup-plugin-node-resolve": "^1.7.1",
     "serve": "^1.4.0",
     "tape": "4.5.1",
     "testling": "~1.7.0",
@@ -47,10 +57,11 @@
     ]
   },
   "scripts": {
-    "start": "npm run watch & serve",
-    "watch": "npm run watch-js & npm run watch-handlebars",
+    "start": "npm run watch & serve & npm run builddocs",
+    "watch": "npm run watch-js & npm run watch-handlebars & npm run watch-css",
     "watch-js": "rollup -cw",
-    "watch-handlebars": "node node_modules/nodemon/bin/nodemon --watch templates/**.hbs --ext hbs --exec npm run handlebars",
+    "watch-handlebars": "node node_modules/nodemon/bin/nodemon --watch templates/**.hbs --ext hbs --exec npm run copyhandlebars",
+    "watch-css": "node node_modules/nodemon/bin/nodemon --watch templates/**.css --ext css --exec npm run copycss",
     "watchold": "watchify -t rollupify --debug -v -d src/index.js -o dist/Wikidata.Infobox.js",
     "build2": "browserify -t rollupify --debug -d src/index.js -o dist/Wikidata.Infobox.js",
     "build3": "rollup src/index.js --output=dist/Wikidata.Infobox.js",
@@ -58,6 +69,9 @@
     "buildcode": "rollup -c",
     "handlebars": "handlebars -k -e hbs templates/** -f dist/Wikidata.Handlebars.js",
     "production": "switch to rollup browserify -d src/index.js | uglifyjs -m -c --comments > dist/Wikidata.Infobox.min.js",
+    "copyhandlebars": "find templates -iname '*.hbs' -exec cp \\{\\} examples/templates/ \\;",
+    "copycss": "find templates -iname '*.css' -exec cp \\{\\} examples/templates/ \\;",
+    "builddocs": "node_modules/.bin/jsdoc --readme README.md src/* -r -c jsdoc.conf",
     "test": "testling | faucet"
   }
 }

@@ -1,0 +1,40 @@
+{{#*inline "myPartial"}}
+{{!http://handlebarsjs.com/partials.html}}
+  <td><ul>{{#each this }}
+    <li>{{mainsnak.datatype}}</li>
+    {{/each}}</ul>
+  </td>
+{{/inline}}
+
+{{ debug this}}
+
+{{#each languages as |Language|}}
+{{#if @first}}
+
+{{#each ../entity/claims }}
+  {{#if @first}}
+    <table>
+      <th>{{label.labels.[0].value}}</th>
+  {{/if}}
+      <tr>
+        <td class="PropertyId">{{ @key }}</td>
+        {{#with (lookup ../../labels/entities @key)}}
+          {{#with (lookup this/labels Language)}}
+            <td class="labelvalue">{{value}}</td>
+          {{/with}}
+          {{#with (lookup this/descriptions Language)}}
+            <td class="labeldescription">{{value}}</td>
+          {{/with}}
+        {{/with}}
+        {{ dynamictemplate @key this.[0].mainsnak.datatype this "jopie" }}
+
+        {{#> myPartial }}
+          <td class="defaultlabel">default value: {{ this.[0].mainsnak.datavalue.value.[0] }}</td>
+        {{/myPartial}}
+      </tr>
+  {{#if @last}}
+    </table>
+  {{/if}}
+{{/each}}
+{{/if}}
+{{/each}} {{! languages }}

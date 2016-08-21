@@ -29,8 +29,8 @@ templates['infobox'] = template({"1":function(container,depth0,helpers,partials,
     + alias3(((helper = (helper = helpers.key || (data && data.key)) != null ? helper : alias2),(typeof helper === "function" ? helper.call(alias1,{"name":"key","hash":{},"data":data,"blockParams":blockParams}) : helper)))
     + "</td>\n"
     + ((stack1 = helpers["with"].call(alias1,helpers.lookup.call(alias1,((stack1 = (depths[2] != null ? depths[2].labels : depths[2])) != null ? stack1.entities : stack1),(data && data.key),{"name":"lookup","hash":{},"data":data,"blockParams":blockParams}),{"name":"with","hash":{},"fn":container.program(9, data, 0, blockParams, depths),"inverse":container.noop,"data":data,"blockParams":blockParams})) != null ? stack1 : "")
-    + "         "
-    + alias3((helpers.dynamictemplate || (depth0 && depth0.dynamictemplate) || alias2).call(alias1,(data && data.key),((stack1 = ((stack1 = (depth0 != null ? depth0["0"] : depth0)) != null ? stack1.mainsnak : stack1)) != null ? stack1.datatype : stack1),depth0,{"name":"dynamictemplate","hash":{},"data":data,"blockParams":blockParams}))
+    + "        "
+    + alias3((helpers.dynamictemplate || (depth0 && depth0.dynamictemplate) || alias2).call(alias1,(data && data.key),((stack1 = ((stack1 = (depth0 != null ? depth0["0"] : depth0)) != null ? stack1.mainsnak : stack1)) != null ? stack1.datatype : stack1),depth0,"jopie",{"name":"dynamictemplate","hash":{},"data":data,"blockParams":blockParams}))
     + "\n\n"
     + ((stack1 = container.invokePartial(partials.myPartial,depth0,{"name":"myPartial","fn":container.program(14, data, 0, blockParams, depths),"inverse":container.noop,"data":data,"blockParams":blockParams,"helpers":helpers,"partials":partials,"decorators":container.decorators})) != null ? stack1 : "")
     + "      </tr>\n"
@@ -88,30 +88,40 @@ templates['P18'] = template({"1":function(container,depth0,helpers,partials,data
 
   return "<td>Picture "
     + alias2(alias1(((stack1 = ((stack1 = (depth0 != null ? depth0.mainsnak : depth0)) != null ? stack1.datavalue : stack1)) != null ? stack1.value : stack1), depth0))
-    + " <img src=\"https://commons.wikimedia.org/w/thumb.php?width=100&f="
+    + "\n  <a href=\"https://commons.wikimedia.org/w/thumb.php?width=100&f="
     + alias2(alias1(((stack1 = ((stack1 = (depth0 != null ? depth0.mainsnak : depth0)) != null ? stack1.datavalue : stack1)) != null ? stack1.value : stack1), depth0))
-    + "\"></td>\n";
+    + "\" title=\""
+    + alias2(alias1(((stack1 = ((stack1 = (depth0 != null ? depth0.mainsnak : depth0)) != null ? stack1.datavalue : stack1)) != null ? stack1.value : stack1), depth0))
+    + "\" data-gallery=\"\">\n  <img src=\"https://commons.wikimedia.org/w/thumb.php?width=100&f="
+    + alias2(alias1(((stack1 = ((stack1 = (depth0 != null ? depth0.mainsnak : depth0)) != null ? stack1.datavalue : stack1)) != null ? stack1.value : stack1), depth0))
+    + "\" title=\""
+    + alias2(alias1(((stack1 = ((stack1 = (depth0 != null ? depth0.mainsnak : depth0)) != null ? stack1.datavalue : stack1)) != null ? stack1.value : stack1), depth0))
+    + "\">\n  </a>\n</td>\n";
 },"compiler":[7,">= 4.0.0"],"main":function(container,depth0,helpers,partials,data) {
-    var stack1, alias1=depth0 != null ? depth0 : {};
+    var stack1;
 
-  return container.escapeExpression((helpers.debug || (depth0 && depth0.debug) || helpers.helperMissing).call(alias1,depth0,{"name":"debug","hash":{},"data":data}))
-    + "\n\n"
-    + ((stack1 = helpers.each.call(alias1,depth0,{"name":"each","hash":{},"fn":container.program(1, data, 0),"inverse":container.noop,"data":data})) != null ? stack1 : "");
+  return "\n"
+    + ((stack1 = helpers.each.call(depth0 != null ? depth0 : {},depth0,{"name":"each","hash":{},"fn":container.program(1, data, 0),"inverse":container.noop,"data":data})) != null ? stack1 : "");
 },"useData":true});
 templates['commonsMedia'] = template({"1":function(container,depth0,helpers,partials,data) {
     var stack1, alias1=container.lambda, alias2=container.escapeExpression;
 
-  return "<td>"
-    + alias2(alias1(((stack1 = ((stack1 = (depth0 != null ? depth0.mainsnak : depth0)) != null ? stack1.datavalue : stack1)) != null ? stack1.datatype : stack1), depth0))
-    + " "
+  return "\n\n<a href=\"https://commons.wikimedia.org/w/thumb.php?width=400&f="
     + alias2(alias1(((stack1 = ((stack1 = (depth0 != null ? depth0.mainsnak : depth0)) != null ? stack1.datavalue : stack1)) != null ? stack1.value : stack1), depth0))
-    + " </td>\n";
+    + "\" title=\""
+    + alias2(alias1(((stack1 = ((stack1 = (depth0 != null ? depth0.mainsnak : depth0)) != null ? stack1.datavalue : stack1)) != null ? stack1.datatype : stack1), depth0))
+    + "\" data-dialog>\n    <img src=\"https://commons.wikimedia.org/w/thumb.php?width=100&f="
+    + alias2(alias1(((stack1 = ((stack1 = (depth0 != null ? depth0.mainsnak : depth0)) != null ? stack1.datavalue : stack1)) != null ? stack1.value : stack1), depth0))
+    + "\" alt=\""
+    + alias2(alias1(((stack1 = ((stack1 = (depth0 != null ? depth0.mainsnak : depth0)) != null ? stack1.datavalue : stack1)) != null ? stack1.value : stack1), depth0))
+    + "\">\n</a>\n\n\n";
 },"compiler":[7,">= 4.0.0"],"main":function(container,depth0,helpers,partials,data) {
     var stack1, alias1=depth0 != null ? depth0 : {};
 
   return container.escapeExpression((helpers.debug || (depth0 && depth0.debug) || helpers.helperMissing).call(alias1,depth0,{"name":"debug","hash":{},"data":data}))
-    + "\n\n"
-    + ((stack1 = helpers.each.call(alias1,depth0,{"name":"each","hash":{},"fn":container.program(1, data, 0),"inverse":container.noop,"data":data})) != null ? stack1 : "");
+    + "\n\n\n\n\n\n<td>\n<div id=\"links\">\n\n"
+    + ((stack1 = helpers.each.call(alias1,depth0,{"name":"each","hash":{},"fn":container.program(1, data, 0),"inverse":container.noop,"data":data})) != null ? stack1 : "")
+    + "</td></div>\n";
 },"useData":true});
 templates['defaultText'] = template({"compiler":[7,">= 4.0.0"],"main":function(container,depth0,helpers,partials,data) {
     return "<td>This is the default</td>\n";
@@ -152,12 +162,37 @@ templates['string'] = template({"1":function(container,depth0,helpers,partials,d
 templates['wikibase-item'] = template({"1":function(container,depth0,helpers,partials,data) {
     var stack1;
 
-  return "<td>"
+  return "  <td>"
+    + container.escapeExpression((helpers.dynamictemplate || (depth0 && depth0.dynamictemplate) || helpers.helperMissing).call(depth0 != null ? depth0 : {},((stack1 = ((stack1 = ((stack1 = (depth0 != null ? depth0.mainsnak : depth0)) != null ? stack1.datavalue : stack1)) != null ? stack1.value : stack1)) != null ? stack1["numeric-id"] : stack1),"defaultText",depth0,"A4",{"name":"dynamictemplate","hash":{},"data":data}))
+    + "</td>\n";
+},"3":function(container,depth0,helpers,partials,data) {
+    var stack1;
+
+  return "\n"
+    + ((stack1 = helpers.each.call(depth0 != null ? depth0 : {},depth0,{"name":"each","hash":{},"fn":container.program(4, data, 0),"inverse":container.noop,"data":data})) != null ? stack1 : "");
+},"4":function(container,depth0,helpers,partials,data) {
+    var stack1;
+
+  return "\n\n\n    <td>"
     + container.escapeExpression(container.lambda(((stack1 = ((stack1 = (depth0 != null ? depth0.mainsnak : depth0)) != null ? stack1.datavalue : stack1)) != null ? stack1.value : stack1), depth0))
+    + "</td>\n\n"
+    + ((stack1 = helpers["if"].call(depth0 != null ? depth0 : {},(depth0 != null ? depth0.mainsnak : depth0),{"name":"if","hash":{},"fn":container.program(5, data, 0),"inverse":container.program(7, data, 0),"data":data})) != null ? stack1 : "");
+},"5":function(container,depth0,helpers,partials,data) {
+    var stack1;
+
+  return "      <td>"
+    + container.escapeExpression((helpers.dynamictemplate || (depth0 && depth0.dynamictemplate) || helpers.helperMissing).call(depth0 != null ? depth0 : {},((stack1 = ((stack1 = ((stack1 = (depth0 != null ? depth0.mainsnak : depth0)) != null ? stack1.datavalue : stack1)) != null ? stack1.value : stack1)) != null ? stack1["numeric-id"] : stack1),((stack1 = (depth0 != null ? depth0.mainsnak : depth0)) != null ? stack1.datatype : stack1),depth0,"A0",{"name":"dynamictemplate","hash":{},"data":data}))
+    + "</td>\n";
+},"7":function(container,depth0,helpers,partials,data) {
+    var stack1;
+
+  return "      <td>"
+    + container.escapeExpression((helpers.dynamictemplate || (depth0 && depth0.dynamictemplate) || helpers.helperMissing).call(depth0 != null ? depth0 : {},((stack1 = ((stack1 = (depth0 != null ? depth0.datavalue : depth0)) != null ? stack1.value : stack1)) != null ? stack1["numeric-id"] : stack1),(depth0 != null ? depth0.datatype : depth0),depth0,"A1",{"name":"dynamictemplate","hash":{},"data":data}))
     + "</td>\n";
 },"compiler":[7,">= 4.0.0"],"main":function(container,depth0,helpers,partials,data) {
     var stack1;
 
-  return ((stack1 = helpers.each.call(depth0 != null ? depth0 : {},depth0,{"name":"each","hash":{},"fn":container.program(1, data, 0),"inverse":container.noop,"data":data})) != null ? stack1 : "");
+  return "\n"
+    + ((stack1 = helpers["if"].call(depth0 != null ? depth0 : {},(depth0 != null ? depth0.mainsnak : depth0),{"name":"if","hash":{},"fn":container.program(1, data, 0),"inverse":container.program(3, data, 0),"data":data})) != null ? stack1 : "");
 },"useData":true});
 })();

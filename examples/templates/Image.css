@@ -1,0 +1,25 @@
+
+.gallerydata .hiddendescription {
+  display: none;
+}
+
+
+.blueimp-gallery > .hiddendescription  {
+  display: none;
+}
+.blueimp-gallery-controls > .hiddendescription {
+  display: none;
+}
+
+.blueimp-gallery > .description {
+  font-size: .5em;
+  width: 300px;
+  position: absolute;
+  top: 30px;
+  left: 15px;
+  color: #fff;
+  display: none;
+}
+.blueimp-gallery-controls > .description {
+  display: block;
+}

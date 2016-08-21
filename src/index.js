@@ -5,10 +5,22 @@
  * Source code can be found at:
  * https://github.com/batje/Wikidata.Infobox
  *
- * @license ISC
+ * @license GPL 3.0
  */
 
+
+/** This is the main export of our InfoBox. */
 export {
   InfoBox
 }
 from './InfoBox';
+
+export {
+  InfoBoxSPARQL
+}
+from './InfoBoxSPARQL';
+
+export {
+  LabelFetcher
+}
+from './LabelFetcher';

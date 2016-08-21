@@ -1,0 +1,21 @@
+<a class="image" href="https://commons.wikimedia.org/w/thumb.php?width=500&f={{filename}}" title="{{extmetadata.ImageDescription.value}}" data-gallery="{{gallery}}">
+  <img src="https://commons.wikimedia.org/w/thumb.php?width=100&f={{filename}}" title="{{extmetadata.ImageDescription.value}}">
+  <dl class="hiddendescription">
+<!--{{#if extmetadata.License}}
+  {{#if extmetadata.LicenseUrl}}
+  <dt>License</dt> <dd><a href="{{extmetadata.LicenseUrl.value}}" title="{{extmetadata.UsageTerms.value}}">{{extmetadata.LicenseShortName.value}}</a></dd>
+  {{else}}
+  <dt>License</dt> <dd>{{extmetadata.LicenseShortName.value}}</dd>
+  <dt>Terms</dt> <dd>{{extmetadata.UsageTerms.value}}</dd>
+  {{/if}}
+{{/if}}
+<dt>Author</dt> <dd>{{#if extmetadata.Copyrighted.value}}©{{/if}} {{extmetadata.Artist.value}}</dd>
+<dt>Credit</dt> <dd>{{extmetadata.Credit.value}}</dd>
+<dt>Date</dt> <dd>{{extmetadata.DateTimeOriginal.value}}</dd>
+<dt>Categories:</dt> <dd>{{extmetadata.Categories.value}}</dd>
+-->
+{{#each extmetadata}}
+<dt>{{@key}}</dt> <dd>{{value}}</dd>
+{{/each}}
+  </dl>
+</a>

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: templates/helpers/P373.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: templates/helpers/P373.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * Copyright (c) 2016, Reinier Battenberg
+ * All rights reserved.
+ *
+ * Source code can be found at:
+ * https://github.com/batje/Wikidata.Infobox
+ *
+ * @license GPL 3.0
+ * @module WikidataHelpers
+ */
+"use strict"
+import ImageGallery from './ImageGallery.js'
+import Image from './Image.js'
+  //Ok, importing lodash modules from these dynamically loaded modules doesnt work
+  // will have to iterate ourselves
+  //import * as forEeach from '../../../node_modules/lodash/forEach.js';
+
+var instantiated = false;
+var instance;
+/* @class that renders images
+ *
+ */
+class P373Class {
+  constructor() {
+    this.ImageGallery = ImageGallery.ImageGallery();
+
+    console.log("loading P373");
+  }
+
+  load(value) {
+    return this.ImageGallery.load(value);
+  }
+
+  registerHelpers(handlebars) {
+    console.log("Registring Helper P373_InsertImages");
+    handlebars.registerHelper('P373_InsertImages', this.InsertImages);
+  }
+
+  InsertImages(gallery) {
+    var galleryname = gallery.mainsnak.datavalue.value;
+    console.log("Going to load Gallery " + galleryname);
+    this.loader = new Promise(function(resolve, reject) {
+      var url =
+        `https://commons.wikimedia.org/w/api.php?action=query&amp;list=categorymembers&amp;cmtype=file&amp;cmtitle=Category:${galleryname}&amp;format=json`;
+      console.log("Going to load images from url ", url);
+      $.ajax({
+          url: url,
+          dataType: "jsonp"
+        })
+        .done(function(data) {
+          var html = '';
+          console.log("images", data);
+          data.query.categorymembers.forEach(function(image, index, images) {
+            //  for (var image in data.query.categorymembers) {
+
+            //  It makes a lot of sense to call an 'Image' template here that fetches metadata (like the license) for each image.
+            // that is planned when commons moves to wikidata, so we can use SPARQL. Soon.
+
+            var title = image.title.substr(5); // Chop off 'File: '
+            // We now have the title of the File. But we need to check if this is an image
+            // The P18 property has a regexp attribute, which we hereby copy hardcoded so we
+            // can do the filtering.
+            // The original: (?i).+\.(jpg|jpeg|png|svg|tif|tiff|gif)
+            var regexp = new RegExp('\.(jpg|jpeg|png|svg|tif|tiff|gif)', 'i');
+            if (regexp.test(title)) {
+              console.log("Adding Picture to gallery.", title);
+              /*  html +=
+                  `&lt;a href="https://commons.wikimedia.org/w/thumb.php?width=600&amp;f=${title}"
+              title="${image.title}" data-gallery="P373">
+                &lt;img src="https://commons.wikimedia.org/w/thumb.php?width=100&amp;f=${title}"
+              title="${image.title}">&lt;/a>`;*/
+              var image = new Image.Image(title);
+              image.render.then(function(imagehtml) {
+                html += imagehtml;
+              })
+            } else {
+              console.log("Skipping file from gallery.", title);
+            }
+
+          });
+          console.log("returning images html", html);
+          resolve(new Handlebars.SafeString(html));
+        })
+        .catch(function(e) {
+          console.error("error loading images from imagegallery " + imagegallery, e);
+          reject("Error fetching images from gallery " + galleryname);
+        });
+
+    });
+
+    return this.loader;
+  }
+
+  postProcess() {
+    $('#P373').click(function(event) {
+      event = event || window.event;
+      var target = event.target || event.srcElement,
+        link = target.src ? target.parentNode : target,
+        options = {
+          index: link,
+          event: event
+        },
+        links = this.getElementsByTagName('a');
+      blueimp.Gallery(links, options);
+    });
+
+  };
+  /**
+   * TODO
+   * Implement the Image API
+   * https://www.mediawiki.org/wiki/API:Imageinfo
+   * eg:
+   * https://en.wikipedia.org/w/api.php?action=query&amp;prop=imageinfo&amp;iiprop=extmetadata&amp;titles=File%3aBrad_Pitt_at_Incirlik2.jpg&amp;format=json (for Brad Pitt)
+   */
+}
+//var P18 = new P18Class();
+
+function P373() {
+  if (typeof instance === 'undefined') {
+    instance = new P373Class();
+  }
+  return instance;
+}
+
+export default {
+  P373
+};
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-WikidataHelpers.html">WikidataHelpers</a></li></ul><h3>Classes</h3><ul><li><a href="HandleBarsWrapperClass.html">HandleBarsWrapperClass</a></li><li><a href="InfoBox.html">InfoBox</a></li><li><a href="InfoBoxSPARQL.html">InfoBoxSPARQL</a></li><li><a href="LabelFetcherClass.html">LabelFetcherClass</a></li><li><a href="module-WikidataHelpers-TimeClass.html">TimeClass</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Sun Aug 14 2016 09:14:21 GMT+0200 (CEST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
