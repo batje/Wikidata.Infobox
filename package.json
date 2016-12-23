@@ -11,36 +11,45 @@
     "wikidata"
   ],
   "author": "Reinier Battenberg",
-  "license": "ISC",
+  "license": "GPL 3.0",
   "bugs": {
     "url": "https://github.com/batje/Wikidata.Infobox/issues"
   },
   "homepage": "https://github.com/batje/Wikidata.Infobox",
   "dependencies": {
+    "bower": "^1.7.9",
+    "buffer": "^4.9.1",
+    "ink-docstrap": "^1.3.0",
     "jquery-accessible-dialog-tooltip-aria": "^1.0.5",
     "jsdoc": "^3.4.0",
     "julian": "^0.1.0",
     "lodash-es": "^4.14.2",
     "nodemon": "^1.9.2",
+    "npm-run-all": "^3.0.0",
+    "onchange": "^2.5.0",
     "promised-handlebars": "^1.0.6",
     "q": "git+ssh://git@github.com/FruitsofThought/q.git#v1",
     "rollup": "^0.31.2",
     "rollup-plugin-commonjs": "^3.3.1",
+    "rollup-plugin-filesize": "^0.4.4",
     "rollup-plugin-node-resolve": "^1.7.1",
+    "rollup-plugin-sourcemaps": "^0.3.7",
+    "rollup-plugin-string": "^2.0.2",
     "rollupify": "^0.3.1",
-    "sphericalmercator": "^1.0.5"
+    "sphericalmercator": "^1.0.5",
+    "uuencode": "git+ssh://git@github.com/FruitsofThought/node-uuencode.git#es6"
   },
   "devDependencies": {
     "babel-preset-es2015-rollup": "^1.1.1",
     "browserify": "~13.0.1",
     "faucet": "0.0.1",
     "rollup-plugin-babel": "^2.5.1",
+    "rollup-plugin-bower-resolve": "^0.2.0",
     "rollup-plugin-commonjs": "^3.3.1",
     "rollup-plugin-node-resolve": "^1.7.1",
     "serve": "^1.4.0",
     "tape": "4.5.1",
-    "testling": "~1.7.0",
-    "watchify": "3.7.0"
+    "testling": "~1.7.0"
   },
   "testling": {
     "scripts": "lib/Leaflet/leaflet-0.7.3/leaflet-src.js",
@@ -58,20 +67,13 @@
   },
   "scripts": {
     "start": "npm run watch & serve & npm run builddocs",
-    "watch": "npm run watch-js & npm run watch-handlebars & npm run watch-css",
+    "watch": "run-p watch-js handlebars:watch",
     "watch-js": "rollup -cw",
-    "watch-handlebars": "node node_modules/nodemon/bin/nodemon --watch templates/**.hbs --ext hbs --exec npm run copyhandlebars",
-    "watch-css": "node node_modules/nodemon/bin/nodemon --watch templates/**.css --ext css --exec npm run copycss",
-    "watchold": "watchify -t rollupify --debug -v -d src/index.js -o dist/Wikidata.Infobox.js",
-    "build2": "browserify -t rollupify --debug -d src/index.js -o dist/Wikidata.Infobox.js",
-    "build3": "rollup src/index.js --output=dist/Wikidata.Infobox.js",
-    "build": "npm run buildcode && npm run handlebars",
+    "handlebars:watch": "onchange 'templates/**/*.hbs' 'templates/**/*.css' 'templates/**/*.js' -i -w -v -- npm run copyhandlebars",
+    "build": "npm run buildcode",
     "buildcode": "rollup -c",
-    "handlebars": "handlebars -k -e hbs templates/** -f dist/Wikidata.Handlebars.js",
-    "production": "switch to rollup browserify -d src/index.js | uglifyjs -m -c --comments > dist/Wikidata.Infobox.min.js",
-    "copyhandlebars": "find templates -iname '*.hbs' -exec cp \\{\\} examples/templates/ \\;",
-    "copycss": "find templates -iname '*.css' -exec cp \\{\\} examples/templates/ \\;",
-    "builddocs": "node_modules/.bin/jsdoc --readme README.md src/* -r -c jsdoc.conf",
+    "copyhandlebars": "find templates \\( -iname '*.hbs -o -iname *.css -o -iname *.js' \\) -exec cp -t examples/templates2 {} +",
+    "builddocs": "node_modules/.bin/jsdoc --readme README.md src/* -r -c jsdoc.conf -d ./docs/ -t ./node_modules/ink-docstrap/template",
     "test": "testling | faucet"
   }
 }

@@ -19,11 +19,18 @@
     "requirejs": "^2.2.0",
     "require-handlebars-plugin": "^1.0.0",
     "handlebars": "^4.0.5",
-    "leaflet": "^1.0.0-rc.2",
+    "leaflet": "^1.0.1",
     "wikidata-sdk": "master",
     "blueimp-gallery": "^2.21.2",
     "post-render-bars": "https://github.com/ekuusela/post-render-bars.git",
     "es6-module-loader": "^0.17.11",
-    "traceur": "^0.0.111"
+    "traceur": "^0.0.111",
+    "he": "^1.1.0",
+    "js-yaml": "^3.6.1",
+    "require1k": "^1.0.0",
+    "systemjs": "*",
+    "tipsy": "^0.1.7",
+    "spin.js": "spin-js#^2.0.1",
+    "jquery-ui": "^1.12.1"
   }
 }
