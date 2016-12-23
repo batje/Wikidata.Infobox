@@ -19,13 +19,18 @@ class JavaScriptFetcherClass {
             System.import('../src/templates/' + key + '.js' + '?bust=' + (new Date()).getTime())
             .then(the_module => {
               console.log("Loaded Javascript for  " + key, handlebars);
-              var property = the_module.default[key]();
+              var cleankey = key.replace('-', '');
+              console.log("Loaded Javascript for clean key  " + cleankey);
+              var property = the_module.default[cleankey]();
               property.load(handlebars).then(function() {
-                console.log("Loaded Object " + key);
-                me.modules[key] = property;
-                // Return the Object for postpocessing
-                resolve(property);
-              });
+                  console.log("Loaded Object " + key);
+                  me.modules[key] = property;
+                  // Return the Object for postpocessing
+                  resolve(property);
+                })
+                .catch(err => {
+                  console.error("Error loading load function for " + key, err);
+                });
             })
             .catch(err => {
               // If not 404, log the error
