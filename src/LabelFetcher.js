@@ -1,5 +1,8 @@
 "use strict"
+import wdk from "../bower_components/wikidata-sdk/dist/wikidata-sdk.js";
 import difference from '../node_modules/lodash-es/difference.js';
+import Config from './utilclasses/Config.js';
+
 
 /** CLass LabelFetcher
  * Static class that monitors the dome for labels that need to be translated
@@ -12,7 +15,7 @@ class LabelFetcher {
    * @param  {Array.String} languages: ['en'] Array of languages.
    * @return {type}                   {@link LabelFetcher}
    */
-  constructor(languages: ['en']) {
+  constructor(languages = ['en']) {
     this.languages = (typeof languages === 'undefined') ? ['en'] : languages;
     this.labels = [];
     var me = this;
@@ -162,7 +165,7 @@ class LabelFetcher {
    * Flattens label fetching results
    *
    * @param  {Array} Qs Array of resolved Qs from Wikidata API
-   * @return {Object}    Object of labels where Q is the key.   
+   * @return {Object}    Object of labels where Q is the key.
    */
   findLabels(Qs) {
     var me = this;
@@ -175,6 +178,6 @@ class LabelFetcher {
   }
 }
 
-export default {
+export {
   LabelFetcher
 };

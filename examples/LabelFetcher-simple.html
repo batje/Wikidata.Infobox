@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Wikidata LabelFetcher Simple</title>
+</head>
+<body>
+  <div id="wikidataoutput">
+    <span class="wikidata-fetchlabel" data-wikidata="Q399981"></span>
+    <br/>
+    The quick <span class="wikidata-fetchlabel" data-wikidata="Q47071"></span> <span class="wikidata-fetchlabel" data-wikidata="Q8331"></span> jumps over the <span class="wikidata-fetchlabel" data-wikidata="Q484">lazy</span> <span class="wikidata-fetchlabel" data-wikidata="Q144"></span>.
+  </div>
+
+  <script type="application/javascript" src="../dist/Wikidata.Infobox.js"></script>
+  <script type="application/javascript">
+
+  var LabelFetcher = new Wikidata.LabelFetcher(['zh', 'en']);
+  LabelFetcher.Populate("#wikidataoutput");
+
+  </script>
+</body>
+</html>

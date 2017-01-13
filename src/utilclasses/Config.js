@@ -1,4 +1,5 @@
 "use strict"
+//import $ from 'jquery';
 import jsyaml from '../../bower_components/js-yaml/dist/js-yaml.js';
 
 var instance;
@@ -13,7 +14,7 @@ var instance;
  * - pass a filename of a yaml file that overrides the default + overrides from the array
  */
 class Config {
-  constructor(config = [], filename = '') {
+  constructor(config = {}, filename = '') {
     console.log("loading config");
 
     this.config = this.getdefaults();
@@ -40,16 +41,29 @@ class Config {
     });
   }
 
-  load(handlebars) {
-    this.handlebars = handlebars;
+  load() {
+    var me = this;
     this.loader.then(function() {
-      console.log("Loading Config");
-      return "Config";
+      console.log("Loaded Config");
+      return me;
     });
     return this.loader;
   }
 
+  /**
+   * getdefaults - description
+   *
+   * @return {ConfigObject} Object holding all default settings
+   * @internal
+   */
   getdefaults() {
+
+    // @todo get the defaults from file (optionally)
+    //
+    //var script = document.currentScript;
+    //var fullUrl = script.src;
+    // cutoff script name and add config.yaml
+    // @see https://developer.mozilla.org/en-US/docs/Web/API/Document/currentScript
     return {
       defaultlabeltemplate: 'label',
       P: {
