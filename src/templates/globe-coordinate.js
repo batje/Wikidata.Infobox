@@ -1,20 +1,11 @@
-/**
- * Copyright (c) 2016, Reinier Battenberg
- * All rights reserved.
- *
- * Source code can be found at:
- * https://github.com/batje/Wikidata.Infobox
- *
- * @license GPL 3.0
- * @module WikidataHelpers
- */
 "use strict"
 import TemplateBaseClass from '../utilclasses/TemplateBaseClass.js';
-import Map from '../utilclasses/Map.js';
+//import Map from '../utilclasses/Map.js';
 
 var instance;
 
-/** @class TimeClass helps rendering time datatype values
+/** Class TimeClass helps rendering time datatype values
+ * @extends TemplateBaseClass
  *
  */
 class GlobeCoordinateClass extends TemplateBaseClass.TemplateBaseClass {
@@ -22,27 +13,32 @@ class GlobeCoordinateClass extends TemplateBaseClass.TemplateBaseClass {
     console.log("loading Globe Coordinates Javascript");
     super();
     // Loading static Gallery which loads the necessary javascript only once
-    this.Map = Map.Map();
+    //this.Map = Map.Map();
     this.points = [];
   }
 
-  load(handlebars) {
+  load(handlebars, utilclass = "Map", variant = "Leaflet") {
     var me = this;
-    var parentpromise = super.load(handlebars);
+    //  var parentpromise = super.load(handlebars, utilclass, variant);
     console.log("Registring Helper globecoordinates_PlotPoint");
     handlebars.registerHelper('globecoordinates_PlotPoint', this.HelperPlotPoint);
-    return new Promise(function(resolve, reject) {
-      Promise.resolve(parentpromise)
-        .then(function() {
-          resolve(me.Map.load(handlebars));
-        });
-    });
+
+    return super.load(handlebars, utilclass, variant)
+      .then(function(map) {
+        me.Map = map;
+      });
+    /*    return new Promise(function(resolve, reject) {
+          Promise.resolve(parentpromise)
+            .then(function() {
+              resolve(me.Map.load(handlebars));
+            });
+        });*/
   }
 
-  postProcess() {
+  /*postProcess() {
     var mymap = L.map('mapid').setView([51.505, -0.09], 13);
     console.log("Postprocessing time");
-  }
+  }*/
 
   HelperPlotPoint(lat, lon, mapid, options) {
     var help = globecoordinate();

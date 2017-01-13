@@ -1,8 +1,14 @@
 "use strict"
-
-var instantiated = false;
+//import System from '../../bower_components/es6-module-loader/dist/es6-module-loader-dev.js'
+// This blows our library up from 300k to 1.5M. So let's include traceur in html for now
+// and see how we can precompile our modules later
+//import traceur from '../../bower_components/traceur/traceur.js'
 var instance;
 
+
+/**
+ * Class JavaScriptFetcherClass
+ */
 class JavaScriptFetcherClass {
   constructor() {
     this.modules = [];

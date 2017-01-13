@@ -5,11 +5,41 @@ import HandleBarsWrapper from './HandleBarsWrapper.js';
 var myJavaScriptFetcher = JavaScriptFetcher.JavaScriptFetcher();
 var myTemplateFetcher = TemplateFetcher.TemplateFetcher();
 
-function dynamicPropertyTemplate(key, template, context, opts) {
 
-  if (key == 'P18') {
-    //  return Promise.resolve("later");
+/**
+ * dynamicPropertyTemplate - description
+ *
+ * @param  {type} key      description
+ * @param  {type} template description
+ * @param  {type} context  description
+ * @param  {type} options  description
+ * @param  {type} root     description
+ * @return {type}          description
+ */
+function dynamicPropertyTemplate(key, template, context, options, root) {
+  var myoptions, localoptions;
+  // options is an optional parameter and root is added by handlebars, always
+  if (typeof root === 'undefined') {
+    root = options;
+    options = "{}";
   }
+  if (key == 'P18') {
+    //debugger;
+
+  }
+  try {
+    localoptions = $.parseJSON(options);
+    myoptions = $.extend(root.data.root.config.P[key], localoptions);
+  } catch (e) {
+    console.error("These options are not valis JSON", options);
+    myoptions = (typeof root.data.root.config.P[key] !== 'undefined') ? root.data.root.config.P[key] : {};
+  }
+  if (myoptions.variant) {
+    template = template + "_" + variant;
+  }
+  context[0].options = myoptions;
+  context['options'] = myoptions;
+  console.log("context", context);
 
   var myHandlebars = HandleBarsWrapper.HandleBarsWrapper();
   var me = this;

@@ -20,7 +20,7 @@ export default {
   footer: "/* You really read all code until the end? Good for you because there is some more here. I can not believe it, but I want to initiate my library automagically and the only way I found you can do that, is by adding it here. And oh and behold, that works. so:*/ \
   console.log(\"Do this\"); \
   var infobox = new Wikidata.InfoBox(); \
-  infobox.Monitor(); \
+  //infobox.Monitor(); \
     ",
   entry: 'src/index.js',
   format: 'umd',

@@ -1,0 +1,47 @@
+{{#each languages as |Language|}}
+{{#with (lookup ../entity.descriptions Language)}}
+  <h1 title="{{value}}">
+{{/with}}
+{{#with (lookup ../entity.labels Language)}}
+{{value}}</h1>
+{{/with}}
+
+  {{#if @first}}
+    <div class="{{#each P31}}{{ baseTypeTemplate "wikibase-item" this.P31 '{"variant":string}' }}{{/each}}">
+    {{#with ../entity/claims }}
+    {{! Image }}
+      {{#if P18}}
+        {{!Labels_render "P18" Language}}
+        {{ dynamicPropertyTemplate "P18" this.[0].mainsnak.datatype this.P18 '{"width": 600,"thumbwidth": 200}' }}
+      {{/if}}
+      {{! Creator }}
+      {{#if P170}}
+        {{Labels_render "P170" Language}}:
+        {{ baseTypeTemplate "wikibase-item" this.P170.[0] "" }}
+      {{/if}}
+      {{! Inception }}
+      {{#if P571}}
+        {{Labels_render "P571" Language}}:
+        {{ baseTypeTemplate "time" this.P571.[0] "" }}
+      {{/if}}
+      {{! Genre }}
+      {{#if P136}}
+        {{Labels_render "P136" Language}}:
+        {{#each this.P136}}
+        {{ baseTypeTemplate "wikibase-item" this "" }}
+        {{/each}}
+      {{/if}}
+      {{! Descriptive URL }}
+      {{#if P195}}
+        {{Labels_render "P195" Language}}:
+        {{ baseTypeTemplate "wikibase-item" this.P195.[0] "" }}
+      {{/if}}
+      {{! Descriptive URL }}
+      {{#if P973}}
+        {{Labels_render "P973" Language}}:
+        {{ baseTypeTemplate "url" this.P973.[0] "" }}
+      {{/if}}
+    {{/with}}
+  </div>
+  {{/if}}
+{{/each}} {{! languages }}

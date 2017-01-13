@@ -1,3 +1,13 @@
+/**
+   * Copyright (c) 2016, Reinier Battenberg
+   * All rights reserved.
+   *
+   * Source code can be found at:
+   * https://github.com/batje/Wikidata.Infobox
+   *
+   * @license GPL 3.0
+   */
+
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
 	typeof define === 'function' && define.amd ? define(['exports'], factory) :
@@ -13,6 +23,3982 @@
 	function createCommonjsModule(fn, module) {
 		return module = { exports: {} }, fn(module, module.exports), module.exports;
 	}
+
+	var jsYaml = createCommonjsModule(function (module, exports) {
+	/* js-yaml 3.6.1 https://github.com/nodeca/js-yaml */(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof commonjsGlobal!=="undefined"){g=commonjsGlobal}else if(typeof self!=="undefined"){g=self}else{g=this}g.jsyaml = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a='function'=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i='function'=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+	'use strict';
+
+
+	var loader = require('./js-yaml/loader');
+	var dumper = require('./js-yaml/dumper');
+
+
+	function deprecated(name) {
+	  return function () {
+	    throw new Error('Function ' + name + ' is deprecated and cannot be used.');
+	  };
+	}
+
+
+	module.exports.Type                = require('./js-yaml/type');
+	module.exports.Schema              = require('./js-yaml/schema');
+	module.exports.FAILSAFE_SCHEMA     = require('./js-yaml/schema/failsafe');
+	module.exports.JSON_SCHEMA         = require('./js-yaml/schema/json');
+	module.exports.CORE_SCHEMA         = require('./js-yaml/schema/core');
+	module.exports.DEFAULT_SAFE_SCHEMA = require('./js-yaml/schema/default_safe');
+	module.exports.DEFAULT_FULL_SCHEMA = require('./js-yaml/schema/default_full');
+	module.exports.load                = loader.load;
+	module.exports.loadAll             = loader.loadAll;
+	module.exports.safeLoad            = loader.safeLoad;
+	module.exports.safeLoadAll         = loader.safeLoadAll;
+	module.exports.dump                = dumper.dump;
+	module.exports.safeDump            = dumper.safeDump;
+	module.exports.YAMLException       = require('./js-yaml/exception');
+
+	// Deprecated schema names from JS-YAML 2.0.x
+	module.exports.MINIMAL_SCHEMA = require('./js-yaml/schema/failsafe');
+	module.exports.SAFE_SCHEMA    = require('./js-yaml/schema/default_safe');
+	module.exports.DEFAULT_SCHEMA = require('./js-yaml/schema/default_full');
+
+	// Deprecated functions from JS-YAML 1.x.x
+	module.exports.scan           = deprecated('scan');
+	module.exports.parse          = deprecated('parse');
+	module.exports.compose        = deprecated('compose');
+	module.exports.addConstructor = deprecated('addConstructor');
+
+	},{"./js-yaml/dumper":3,"./js-yaml/exception":4,"./js-yaml/loader":5,"./js-yaml/schema":7,"./js-yaml/schema/core":8,"./js-yaml/schema/default_full":9,"./js-yaml/schema/default_safe":10,"./js-yaml/schema/failsafe":11,"./js-yaml/schema/json":12,"./js-yaml/type":13}],2:[function(require,module,exports){
+	'use strict';
+
+
+	function isNothing(subject) {
+	  return (typeof subject === 'undefined') || (subject === null);
+	}
+
+
+	function isObject(subject) {
+	  return (typeof subject === 'object') && (subject !== null);
+	}
+
+
+	function toArray(sequence) {
+	  if (Array.isArray(sequence)) return sequence;
+	  else if (isNothing(sequence)) return [];
+
+	  return [ sequence ];
+	}
+
+
+	function extend(target, source) {
+	  var index, length, key, sourceKeys;
+
+	  if (source) {
+	    sourceKeys = Object.keys(source);
+
+	    for (index = 0, length = sourceKeys.length; index < length; index += 1) {
+	      key = sourceKeys[index];
+	      target[key] = source[key];
+	    }
+	  }
+
+	  return target;
+	}
+
+
+	function repeat(string, count) {
+	  var result = '', cycle;
+
+	  for (cycle = 0; cycle < count; cycle += 1) {
+	    result += string;
+	  }
+
+	  return result;
+	}
+
+
+	function isNegativeZero(number) {
+	  return (number === 0) && (Number.NEGATIVE_INFINITY === 1 / number);
+	}
+
+
+	module.exports.isNothing      = isNothing;
+	module.exports.isObject       = isObject;
+	module.exports.toArray        = toArray;
+	module.exports.repeat         = repeat;
+	module.exports.isNegativeZero = isNegativeZero;
+	module.exports.extend         = extend;
+
+	},{}],3:[function(require,module,exports){
+	'use strict';
+
+	/*eslint-disable no-use-before-define*/
+
+	var common              = require('./common');
+	var YAMLException       = require('./exception');
+	var DEFAULT_FULL_SCHEMA = require('./schema/default_full');
+	var DEFAULT_SAFE_SCHEMA = require('./schema/default_safe');
+
+	var _toString       = Object.prototype.toString;
+	var _hasOwnProperty = Object.prototype.hasOwnProperty;
+
+	var CHAR_TAB                  = 0x09; /* Tab */
+	var CHAR_LINE_FEED            = 0x0A; /* LF */
+	var CHAR_SPACE                = 0x20; /* Space */
+	var CHAR_EXCLAMATION          = 0x21; /* ! */
+	var CHAR_DOUBLE_QUOTE         = 0x22; /* " */
+	var CHAR_SHARP                = 0x23; /* # */
+	var CHAR_PERCENT              = 0x25; /* % */
+	var CHAR_AMPERSAND            = 0x26; /* & */
+	var CHAR_SINGLE_QUOTE         = 0x27; /* ' */
+	var CHAR_ASTERISK             = 0x2A; /* * */
+	var CHAR_COMMA                = 0x2C; /* , */
+	var CHAR_MINUS                = 0x2D; /* - */
+	var CHAR_COLON                = 0x3A; /* : */
+	var CHAR_GREATER_THAN         = 0x3E; /* > */
+	var CHAR_QUESTION             = 0x3F; /* ? */
+	var CHAR_COMMERCIAL_AT        = 0x40; /* @ */
+	var CHAR_LEFT_SQUARE_BRACKET  = 0x5B; /* [ */
+	var CHAR_RIGHT_SQUARE_BRACKET = 0x5D; /* ] */
+	var CHAR_GRAVE_ACCENT         = 0x60; /* ` */
+	var CHAR_LEFT_CURLY_BRACKET   = 0x7B; /* { */
+	var CHAR_VERTICAL_LINE        = 0x7C; /* | */
+	var CHAR_RIGHT_CURLY_BRACKET  = 0x7D; /* } */
+
+	var ESCAPE_SEQUENCES = {};
+
+	ESCAPE_SEQUENCES[0x00]   = '\\0';
+	ESCAPE_SEQUENCES[0x07]   = '\\a';
+	ESCAPE_SEQUENCES[0x08]   = '\\b';
+	ESCAPE_SEQUENCES[0x09]   = '\\t';
+	ESCAPE_SEQUENCES[0x0A]   = '\\n';
+	ESCAPE_SEQUENCES[0x0B]   = '\\v';
+	ESCAPE_SEQUENCES[0x0C]   = '\\f';
+	ESCAPE_SEQUENCES[0x0D]   = '\\r';
+	ESCAPE_SEQUENCES[0x1B]   = '\\e';
+	ESCAPE_SEQUENCES[0x22]   = '\\"';
+	ESCAPE_SEQUENCES[0x5C]   = '\\\\';
+	ESCAPE_SEQUENCES[0x85]   = '\\N';
+	ESCAPE_SEQUENCES[0xA0]   = '\\_';
+	ESCAPE_SEQUENCES[0x2028] = '\\L';
+	ESCAPE_SEQUENCES[0x2029] = '\\P';
+
+	var DEPRECATED_BOOLEANS_SYNTAX = [
+	  'y', 'Y', 'yes', 'Yes', 'YES', 'on', 'On', 'ON',
+	  'n', 'N', 'no', 'No', 'NO', 'off', 'Off', 'OFF'
+	];
+
+	function compileStyleMap(schema, map) {
+	  var result, keys, index, length, tag, style, type;
+
+	  if (map === null) return {};
+
+	  result = {};
+	  keys = Object.keys(map);
+
+	  for (index = 0, length = keys.length; index < length; index += 1) {
+	    tag = keys[index];
+	    style = String(map[tag]);
+
+	    if (tag.slice(0, 2) === '!!') {
+	      tag = 'tag:yaml.org,2002:' + tag.slice(2);
+	    }
+
+	    type = schema.compiledTypeMap[tag];
+
+	    if (type && _hasOwnProperty.call(type.styleAliases, style)) {
+	      style = type.styleAliases[style];
+	    }
+
+	    result[tag] = style;
+	  }
+
+	  return result;
+	}
+
+	function encodeHex(character) {
+	  var string, handle, length;
+
+	  string = character.toString(16).toUpperCase();
+
+	  if (character <= 0xFF) {
+	    handle = 'x';
+	    length = 2;
+	  } else if (character <= 0xFFFF) {
+	    handle = 'u';
+	    length = 4;
+	  } else if (character <= 0xFFFFFFFF) {
+	    handle = 'U';
+	    length = 8;
+	  } else {
+	    throw new YAMLException('code point within a string may not be greater than 0xFFFFFFFF');
+	  }
+
+	  return '\\' + handle + common.repeat('0', length - string.length) + string;
+	}
+
+	function State(options) {
+	  this.schema       = options['schema'] || DEFAULT_FULL_SCHEMA;
+	  this.indent       = Math.max(1, (options['indent'] || 2));
+	  this.skipInvalid  = options['skipInvalid'] || false;
+	  this.flowLevel    = (common.isNothing(options['flowLevel']) ? -1 : options['flowLevel']);
+	  this.styleMap     = compileStyleMap(this.schema, options['styles'] || null);
+	  this.sortKeys     = options['sortKeys'] || false;
+	  this.lineWidth    = options['lineWidth'] || 80;
+	  this.noRefs       = options['noRefs'] || false;
+	  this.noCompatMode = options['noCompatMode'] || false;
+
+	  this.implicitTypes = this.schema.compiledImplicit;
+	  this.explicitTypes = this.schema.compiledExplicit;
+
+	  this.tag = null;
+	  this.result = '';
+
+	  this.duplicates = [];
+	  this.usedDuplicates = null;
+	}
+
+	// Indents every line in a string. Empty lines (\n only) are not indented.
+	function indentString(string, spaces) {
+	  var ind = common.repeat(' ', spaces),
+	      position = 0,
+	      next = -1,
+	      result = '',
+	      line,
+	      length = string.length;
+
+	  while (position < length) {
+	    next = string.indexOf('\n', position);
+	    if (next === -1) {
+	      line = string.slice(position);
+	      position = length;
+	    } else {
+	      line = string.slice(position, next + 1);
+	      position = next + 1;
+	    }
+
+	    if (line.length && line !== '\n') result += ind;
+
+	    result += line;
+	  }
+
+	  return result;
+	}
+
+	function generateNextLine(state, level) {
+	  return '\n' + common.repeat(' ', state.indent * level);
+	}
+
+	function testImplicitResolving(state, str) {
+	  var index, length, type;
+
+	  for (index = 0, length = state.implicitTypes.length; index < length; index += 1) {
+	    type = state.implicitTypes[index];
+
+	    if (type.resolve(str)) {
+	      return true;
+	    }
+	  }
+
+	  return false;
+	}
+
+	// [33] s-white ::= s-space | s-tab
+	function isWhitespace(c) {
+	  return c === CHAR_SPACE || c === CHAR_TAB;
+	}
+
+	// Returns true if the character can be printed without escaping.
+	// From YAML 1.2: "any allowed characters known to be non-printable
+	// should also be escaped. [However,] This isn’t mandatory"
+	// Derived from nb-char - \t - #x85 - #xA0 - #x2028 - #x2029.
+	function isPrintable(c) {
+	  return  (0x00020 <= c && c <= 0x00007E)
+	      || ((0x000A1 <= c && c <= 0x00D7FF) && c !== 0x2028 && c !== 0x2029)
+	      || ((0x0E000 <= c && c <= 0x00FFFD) && c !== 0xFEFF /* BOM */)
+	      ||  (0x10000 <= c && c <= 0x10FFFF);
+	}
+
+	// Simplified test for values allowed after the first character in plain style.
+	function isPlainSafe(c) {
+	  // Uses a subset of nb-char - c-flow-indicator - ":" - "#"
+	  // where nb-char ::= c-printable - b-char - c-byte-order-mark.
+	  return isPrintable(c) && c !== 0xFEFF
+	    // - c-flow-indicator
+	    && c !== CHAR_COMMA
+	    && c !== CHAR_LEFT_SQUARE_BRACKET
+	    && c !== CHAR_RIGHT_SQUARE_BRACKET
+	    && c !== CHAR_LEFT_CURLY_BRACKET
+	    && c !== CHAR_RIGHT_CURLY_BRACKET
+	    // - ":" - "#"
+	    && c !== CHAR_COLON
+	    && c !== CHAR_SHARP;
+	}
+
+	// Simplified test for values allowed as the first character in plain style.
+	function isPlainSafeFirst(c) {
+	  // Uses a subset of ns-char - c-indicator
+	  // where ns-char = nb-char - s-white.
+	  return isPrintable(c) && c !== 0xFEFF
+	    && !isWhitespace(c) // - s-white
+	    // - (c-indicator ::=
+	    // “-” | “?” | “:” | “,” | “[” | “]” | “{” | “}”
+	    && c !== CHAR_MINUS
+	    && c !== CHAR_QUESTION
+	    && c !== CHAR_COLON
+	    && c !== CHAR_COMMA
+	    && c !== CHAR_LEFT_SQUARE_BRACKET
+	    && c !== CHAR_RIGHT_SQUARE_BRACKET
+	    && c !== CHAR_LEFT_CURLY_BRACKET
+	    && c !== CHAR_RIGHT_CURLY_BRACKET
+	    // | “#” | “&” | “*” | “!” | “|” | “>” | “'” | “"”
+	    && c !== CHAR_SHARP
+	    && c !== CHAR_AMPERSAND
+	    && c !== CHAR_ASTERISK
+	    && c !== CHAR_EXCLAMATION
+	    && c !== CHAR_VERTICAL_LINE
+	    && c !== CHAR_GREATER_THAN
+	    && c !== CHAR_SINGLE_QUOTE
+	    && c !== CHAR_DOUBLE_QUOTE
+	    // | “%” | “@” | “`”)
+	    && c !== CHAR_PERCENT
+	    && c !== CHAR_COMMERCIAL_AT
+	    && c !== CHAR_GRAVE_ACCENT;
+	}
+
+	var STYLE_PLAIN   = 1,
+	    STYLE_SINGLE  = 2,
+	    STYLE_LITERAL = 3,
+	    STYLE_FOLDED  = 4,
+	    STYLE_DOUBLE  = 5;
+
+	// Determines which scalar styles are possible and returns the preferred style.
+	// lineWidth = -1 => no limit.
+	// Pre-conditions: str.length > 0.
+	// Post-conditions:
+	//    STYLE_PLAIN or STYLE_SINGLE => no \n are in the string.
+	//    STYLE_LITERAL => no lines are suitable for folding (or lineWidth is -1).
+	//    STYLE_FOLDED => a line > lineWidth and can be folded (and lineWidth != -1).
+	function chooseScalarStyle(string, singleLineOnly, indentPerLevel, lineWidth, testAmbiguousType) {
+	  var i;
+	  var char;
+	  var hasLineBreak = false;
+	  var hasFoldableLine = false; // only checked if shouldTrackWidth
+	  var shouldTrackWidth = lineWidth !== -1;
+	  var previousLineBreak = -1; // count the first line correctly
+	  var plain = isPlainSafeFirst(string.charCodeAt(0))
+	          && !isWhitespace(string.charCodeAt(string.length - 1));
+
+	  if (singleLineOnly) {
+	    // Case: no block styles.
+	    // Check for disallowed characters to rule out plain and single.
+	    for (i = 0; i < string.length; i++) {
+	      char = string.charCodeAt(i);
+	      if (!isPrintable(char)) {
+	        return STYLE_DOUBLE;
+	      }
+	      plain = plain && isPlainSafe(char);
+	    }
+	  } else {
+	    // Case: block styles permitted.
+	    for (i = 0; i < string.length; i++) {
+	      char = string.charCodeAt(i);
+	      if (char === CHAR_LINE_FEED) {
+	        hasLineBreak = true;
+	        // Check if any line can be folded.
+	        if (shouldTrackWidth) {
+	          hasFoldableLine = hasFoldableLine ||
+	            // Foldable line = too long, and not more-indented.
+	            (i - previousLineBreak - 1 > lineWidth &&
+	             string[previousLineBreak + 1] !== ' ');
+	          previousLineBreak = i;
+	        }
+	      } else if (!isPrintable(char)) {
+	        return STYLE_DOUBLE;
+	      }
+	      plain = plain && isPlainSafe(char);
+	    }
+	    // in case the end is missing a \n
+	    hasFoldableLine = hasFoldableLine || (shouldTrackWidth &&
+	      (i - previousLineBreak - 1 > lineWidth &&
+	       string[previousLineBreak + 1] !== ' '));
+	  }
+	  // Although every style can represent \n without escaping, prefer block styles
+	  // for multiline, since they're more readable and they don't add empty lines.
+	  // Also prefer folding a super-long line.
+	  if (!hasLineBreak && !hasFoldableLine) {
+	    // Strings interpretable as another type have to be quoted;
+	    // e.g. the string 'true' vs. the boolean true.
+	    return plain && !testAmbiguousType(string)
+	      ? STYLE_PLAIN : STYLE_SINGLE;
+	  }
+	  // Edge case: block indentation indicator can only have one digit.
+	  if (string[0] === ' ' && indentPerLevel > 9) {
+	    return STYLE_DOUBLE;
+	  }
+	  // At this point we know block styles are valid.
+	  // Prefer literal style unless we want to fold.
+	  return hasFoldableLine ? STYLE_FOLDED : STYLE_LITERAL;
+	}
+
+	// Note: line breaking/folding is implemented for only the folded style.
+	// NB. We drop the last trailing newline (if any) of a returned block scalar
+	//  since the dumper adds its own newline. This always works:
+	//    • No ending newline => unaffected; already using strip "-" chomping.
+	//    • Ending newline    => removed then restored.
+	//  Importantly, this keeps the "+" chomp indicator from gaining an extra line.
+	function writeScalar(state, string, level, iskey) {
+	  state.dump = (function () {
+	    if (string.length === 0) {
+	      return "''";
+	    }
+	    if (!state.noCompatMode &&
+	        DEPRECATED_BOOLEANS_SYNTAX.indexOf(string) !== -1) {
+	      return "'" + string + "'";
+	    }
+
+	    var indent = state.indent * Math.max(1, level); // no 0-indent scalars
+	    // As indentation gets deeper, let the width decrease monotonically
+	    // to the lower bound min(state.lineWidth, 40).
+	    // Note that this implies
+	    //  state.lineWidth ≤ 40 + state.indent: width is fixed at the lower bound.
+	    //  state.lineWidth > 40 + state.indent: width decreases until the lower bound.
+	    // This behaves better than a constant minimum width which disallows narrower options,
+	    // or an indent threshold which causes the width to suddenly increase.
+	    var lineWidth = state.lineWidth === -1
+	      ? -1 : Math.max(Math.min(state.lineWidth, 40), state.lineWidth - indent);
+
+	    // Without knowing if keys are implicit/explicit, assume implicit for safety.
+	    var singleLineOnly = iskey
+	      // No block styles in flow mode.
+	      || (state.flowLevel > -1 && level >= state.flowLevel);
+	    function testAmbiguity(string) {
+	      return testImplicitResolving(state, string);
+	    }
+
+	    switch (chooseScalarStyle(string, singleLineOnly, state.indent, lineWidth, testAmbiguity)) {
+	      case STYLE_PLAIN:
+	        return string;
+	      case STYLE_SINGLE:
+	        return "'" + string.replace(/'/g, "''") + "'";
+	      case STYLE_LITERAL:
+	        return '|' + blockHeader(string, state.indent)
+	          + dropEndingNewline(indentString(string, indent));
+	      case STYLE_FOLDED:
+	        return '>' + blockHeader(string, state.indent)
+	          + dropEndingNewline(indentString(foldString(string, lineWidth), indent));
+	      case STYLE_DOUBLE:
+	        return '"' + escapeString(string, lineWidth) + '"';
+	      default:
+	        throw new YAMLException('impossible error: invalid scalar style');
+	    }
+	  }());
+	}
+
+	// Pre-conditions: string is valid for a block scalar, 1 <= indentPerLevel <= 9.
+	function blockHeader(string, indentPerLevel) {
+	  var indentIndicator = (string[0] === ' ') ? String(indentPerLevel) : '';
+
+	  // note the special case: the string '\n' counts as a "trailing" empty line.
+	  var clip =          string[string.length - 1] === '\n';
+	  var keep = clip && (string[string.length - 2] === '\n' || string === '\n');
+	  var chomp = keep ? '+' : (clip ? '' : '-');
+
+	  return indentIndicator + chomp + '\n';
+	}
+
+	// (See the note for writeScalar.)
+	function dropEndingNewline(string) {
+	  return string[string.length - 1] === '\n' ? string.slice(0, -1) : string;
+	}
+
+	// Note: a long line without a suitable break point will exceed the width limit.
+	// Pre-conditions: every char in str isPrintable, str.length > 0, width > 0.
+	function foldString(string, width) {
+	  // In folded style, $k$ consecutive newlines output as $k+1$ newlines—
+	  // unless they're before or after a more-indented line, or at the very
+	  // beginning or end, in which case $k$ maps to $k$.
+	  // Therefore, parse each chunk as newline(s) followed by a content line.
+	  var lineRe = /(\n+)([^\n]*)/g;
+
+	  // first line (possibly an empty line)
+	  var result = (function () {
+	    var nextLF = string.indexOf('\n');
+	    nextLF = nextLF !== -1 ? nextLF : string.length;
+	    lineRe.lastIndex = nextLF;
+	    return foldLine(string.slice(0, nextLF), width);
+	  }());
+	  // If we haven't reached the first content line yet, don't add an extra \n.
+	  var prevMoreIndented = string[0] === '\n' || string[0] === ' ';
+	  var moreIndented;
+
+	  // rest of the lines
+	  var match;
+	  while ((match = lineRe.exec(string))) {
+	    var prefix = match[1], line = match[2];
+	    moreIndented = (line[0] === ' ');
+	    result += prefix
+	      + (!prevMoreIndented && !moreIndented && line !== ''
+	        ? '\n' : '')
+	      + foldLine(line, width);
+	    prevMoreIndented = moreIndented;
+	  }
+
+	  return result;
+	}
+
+	// Greedy line breaking.
+	// Picks the longest line under the limit each time,
+	// otherwise settles for the shortest line over the limit.
+	// NB. More-indented lines *cannot* be folded, as that would add an extra \n.
+	function foldLine(line, width) {
+	  if (line === '' || line[0] === ' ') return line;
+
+	  // Since a more-indented line adds a \n, breaks can't be followed by a space.
+	  var breakRe = / [^ ]/g; // note: the match index will always be <= length-2.
+	  var match;
+	  // start is an inclusive index. end, curr, and next are exclusive.
+	  var start = 0, end, curr = 0, next = 0;
+	  var result = '';
+
+	  // Invariants: 0 <= start <= length-1.
+	  //   0 <= curr <= next <= max(0, length-2). curr - start <= width.
+	  // Inside the loop:
+	  //   A match implies length >= 2, so curr and next are <= length-2.
+	  while ((match = breakRe.exec(line))) {
+	    next = match.index;
+	    // maintain invariant: curr - start <= width
+	    if (next - start > width) {
+	      end = (curr > start) ? curr : next; // derive end <= length-2
+	      result += '\n' + line.slice(start, end);
+	      // skip the space that was output as \n
+	      start = end + 1;                    // derive start <= length-1
+	    }
+	    curr = next;
+	  }
+
+	  // By the invariants, start <= length-1, so there is something left over.
+	  // It is either the whole string or a part starting from non-whitespace.
+	  result += '\n';
+	  // Insert a break if the remainder is too long and there is a break available.
+	  if (line.length - start > width && curr > start) {
+	    result += line.slice(start, curr) + '\n' + line.slice(curr + 1);
+	  } else {
+	    result += line.slice(start);
+	  }
+
+	  return result.slice(1); // drop extra \n joiner
+	}
+
+	// Escapes a double-quoted string.
+	function escapeString(string) {
+	  var result = '';
+	  var char;
+	  var escapeSeq;
+
+	  for (var i = 0; i < string.length; i++) {
+	    char = string.charCodeAt(i);
+	    escapeSeq = ESCAPE_SEQUENCES[char];
+	    result += !escapeSeq && isPrintable(char)
+	      ? string[i]
+	      : escapeSeq || encodeHex(char);
+	  }
+
+	  return result;
+	}
+
+	function writeFlowSequence(state, level, object) {
+	  var _result = '',
+	      _tag    = state.tag,
+	      index,
+	      length;
+
+	  for (index = 0, length = object.length; index < length; index += 1) {
+	    // Write only valid elements.
+	    if (writeNode(state, level, object[index], false, false)) {
+	      if (index !== 0) _result += ', ';
+	      _result += state.dump;
+	    }
+	  }
+
+	  state.tag = _tag;
+	  state.dump = '[' + _result + ']';
+	}
+
+	function writeBlockSequence(state, level, object, compact) {
+	  var _result = '',
+	      _tag    = state.tag,
+	      index,
+	      length;
+
+	  for (index = 0, length = object.length; index < length; index += 1) {
+	    // Write only valid elements.
+	    if (writeNode(state, level + 1, object[index], true, true)) {
+	      if (!compact || index !== 0) {
+	        _result += generateNextLine(state, level);
+	      }
+	      _result += '- ' + state.dump;
+	    }
+	  }
+
+	  state.tag = _tag;
+	  state.dump = _result || '[]'; // Empty sequence if no valid values.
+	}
+
+	function writeFlowMapping(state, level, object) {
+	  var _result       = '',
+	      _tag          = state.tag,
+	      objectKeyList = Object.keys(object),
+	      index,
+	      length,
+	      objectKey,
+	      objectValue,
+	      pairBuffer;
+
+	  for (index = 0, length = objectKeyList.length; index < length; index += 1) {
+	    pairBuffer = '';
+
+	    if (index !== 0) pairBuffer += ', ';
+
+	    objectKey = objectKeyList[index];
+	    objectValue = object[objectKey];
+
+	    if (!writeNode(state, level, objectKey, false, false)) {
+	      continue; // Skip this pair because of invalid key;
+	    }
+
+	    if (state.dump.length > 1024) pairBuffer += '? ';
+
+	    pairBuffer += state.dump + ': ';
+
+	    if (!writeNode(state, level, objectValue, false, false)) {
+	      continue; // Skip this pair because of invalid value.
+	    }
+
+	    pairBuffer += state.dump;
+
+	    // Both key and value are valid.
+	    _result += pairBuffer;
+	  }
+
+	  state.tag = _tag;
+	  state.dump = '{' + _result + '}';
+	}
+
+	function writeBlockMapping(state, level, object, compact) {
+	  var _result       = '',
+	      _tag          = state.tag,
+	      objectKeyList = Object.keys(object),
+	      index,
+	      length,
+	      objectKey,
+	      objectValue,
+	      explicitPair,
+	      pairBuffer;
+
+	  // Allow sorting keys so that the output file is deterministic
+	  if (state.sortKeys === true) {
+	    // Default sorting
+	    objectKeyList.sort();
+	  } else if (typeof state.sortKeys === 'function') {
+	    // Custom sort function
+	    objectKeyList.sort(state.sortKeys);
+	  } else if (state.sortKeys) {
+	    // Something is wrong
+	    throw new YAMLException('sortKeys must be a boolean or a function');
+	  }
+
+	  for (index = 0, length = objectKeyList.length; index < length; index += 1) {
+	    pairBuffer = '';
+
+	    if (!compact || index !== 0) {
+	      pairBuffer += generateNextLine(state, level);
+	    }
+
+	    objectKey = objectKeyList[index];
+	    objectValue = object[objectKey];
+
+	    if (!writeNode(state, level + 1, objectKey, true, true, true)) {
+	      continue; // Skip this pair because of invalid key.
+	    }
+
+	    explicitPair = (state.tag !== null && state.tag !== '?') ||
+	                   (state.dump && state.dump.length > 1024);
+
+	    if (explicitPair) {
+	      if (state.dump && CHAR_LINE_FEED === state.dump.charCodeAt(0)) {
+	        pairBuffer += '?';
+	      } else {
+	        pairBuffer += '? ';
+	      }
+	    }
+
+	    pairBuffer += state.dump;
+
+	    if (explicitPair) {
+	      pairBuffer += generateNextLine(state, level);
+	    }
+
+	    if (!writeNode(state, level + 1, objectValue, true, explicitPair)) {
+	      continue; // Skip this pair because of invalid value.
+	    }
+
+	    if (state.dump && CHAR_LINE_FEED === state.dump.charCodeAt(0)) {
+	      pairBuffer += ':';
+	    } else {
+	      pairBuffer += ': ';
+	    }
+
+	    pairBuffer += state.dump;
+
+	    // Both key and value are valid.
+	    _result += pairBuffer;
+	  }
+
+	  state.tag = _tag;
+	  state.dump = _result || '{}'; // Empty mapping if no valid pairs.
+	}
+
+	function detectType(state, object, explicit) {
+	  var _result, typeList, index, length, type, style;
+
+	  typeList = explicit ? state.explicitTypes : state.implicitTypes;
+
+	  for (index = 0, length = typeList.length; index < length; index += 1) {
+	    type = typeList[index];
+
+	    if ((type.instanceOf  || type.predicate) &&
+	        (!type.instanceOf || ((typeof object === 'object') && (object instanceof type.instanceOf))) &&
+	        (!type.predicate  || type.predicate(object))) {
+
+	      state.tag = explicit ? type.tag : '?';
+
+	      if (type.represent) {
+	        style = state.styleMap[type.tag] || type.defaultStyle;
+
+	        if (_toString.call(type.represent) === '[object Function]') {
+	          _result = type.represent(object, style);
+	        } else if (_hasOwnProperty.call(type.represent, style)) {
+	          _result = type.represent[style](object, style);
+	        } else {
+	          throw new YAMLException('!<' + type.tag + '> tag resolver accepts not "' + style + '" style');
+	        }
+
+	        state.dump = _result;
+	      }
+
+	      return true;
+	    }
+	  }
+
+	  return false;
+	}
+
+	// Serializes `object` and writes it to global `result`.
+	// Returns true on success, or false on invalid object.
+	//
+	function writeNode(state, level, object, block, compact, iskey) {
+	  state.tag = null;
+	  state.dump = object;
+
+	  if (!detectType(state, object, false)) {
+	    detectType(state, object, true);
+	  }
+
+	  var type = _toString.call(state.dump);
+
+	  if (block) {
+	    block = (state.flowLevel < 0 || state.flowLevel > level);
+	  }
+
+	  var objectOrArray = type === '[object Object]' || type === '[object Array]',
+	      duplicateIndex,
+	      duplicate;
+
+	  if (objectOrArray) {
+	    duplicateIndex = state.duplicates.indexOf(object);
+	    duplicate = duplicateIndex !== -1;
+	  }
+
+	  if ((state.tag !== null && state.tag !== '?') || duplicate || (state.indent !== 2 && level > 0)) {
+	    compact = false;
+	  }
+
+	  if (duplicate && state.usedDuplicates[duplicateIndex]) {
+	    state.dump = '*ref_' + duplicateIndex;
+	  } else {
+	    if (objectOrArray && duplicate && !state.usedDuplicates[duplicateIndex]) {
+	      state.usedDuplicates[duplicateIndex] = true;
+	    }
+	    if (type === '[object Object]') {
+	      if (block && (Object.keys(state.dump).length !== 0)) {
+	        writeBlockMapping(state, level, state.dump, compact);
+	        if (duplicate) {
+	          state.dump = '&ref_' + duplicateIndex + state.dump;
+	        }
+	      } else {
+	        writeFlowMapping(state, level, state.dump);
+	        if (duplicate) {
+	          state.dump = '&ref_' + duplicateIndex + ' ' + state.dump;
+	        }
+	      }
+	    } else if (type === '[object Array]') {
+	      if (block && (state.dump.length !== 0)) {
+	        writeBlockSequence(state, level, state.dump, compact);
+	        if (duplicate) {
+	          state.dump = '&ref_' + duplicateIndex + state.dump;
+	        }
+	      } else {
+	        writeFlowSequence(state, level, state.dump);
+	        if (duplicate) {
+	          state.dump = '&ref_' + duplicateIndex + ' ' + state.dump;
+	        }
+	      }
+	    } else if (type === '[object String]') {
+	      if (state.tag !== '?') {
+	        writeScalar(state, state.dump, level, iskey);
+	      }
+	    } else {
+	      if (state.skipInvalid) return false;
+	      throw new YAMLException('unacceptable kind of an object to dump ' + type);
+	    }
+
+	    if (state.tag !== null && state.tag !== '?') {
+	      state.dump = '!<' + state.tag + '> ' + state.dump;
+	    }
+	  }
+
+	  return true;
+	}
+
+	function getDuplicateReferences(object, state) {
+	  var objects = [],
+	      duplicatesIndexes = [],
+	      index,
+	      length;
+
+	  inspectNode(object, objects, duplicatesIndexes);
+
+	  for (index = 0, length = duplicatesIndexes.length; index < length; index += 1) {
+	    state.duplicates.push(objects[duplicatesIndexes[index]]);
+	  }
+	  state.usedDuplicates = new Array(length);
+	}
+
+	function inspectNode(object, objects, duplicatesIndexes) {
+	  var objectKeyList,
+	      index,
+	      length;
+
+	  if (object !== null && typeof object === 'object') {
+	    index = objects.indexOf(object);
+	    if (index !== -1) {
+	      if (duplicatesIndexes.indexOf(index) === -1) {
+	        duplicatesIndexes.push(index);
+	      }
+	    } else {
+	      objects.push(object);
+
+	      if (Array.isArray(object)) {
+	        for (index = 0, length = object.length; index < length; index += 1) {
+	          inspectNode(object[index], objects, duplicatesIndexes);
+	        }
+	      } else {
+	        objectKeyList = Object.keys(object);
+
+	        for (index = 0, length = objectKeyList.length; index < length; index += 1) {
+	          inspectNode(object[objectKeyList[index]], objects, duplicatesIndexes);
+	        }
+	      }
+	    }
+	  }
+	}
+
+	function dump(input, options) {
+	  options = options || {};
+
+	  var state = new State(options);
+
+	  if (!state.noRefs) getDuplicateReferences(input, state);
+
+	  if (writeNode(state, 0, input, true, true)) return state.dump + '\n';
+
+	  return '';
+	}
+
+	function safeDump(input, options) {
+	  return dump(input, common.extend({ schema: DEFAULT_SAFE_SCHEMA }, options));
+	}
+
+	module.exports.dump     = dump;
+	module.exports.safeDump = safeDump;
+
+	},{"./common":2,"./exception":4,"./schema/default_full":9,"./schema/default_safe":10}],4:[function(require,module,exports){
+	// YAML error class. http://stackoverflow.com/questions/8458984
+	//
+	'use strict';
+
+	function YAMLException(reason, mark) {
+	  // Super constructor
+	  Error.call(this);
+
+	  // Include stack trace in error object
+	  if (Error.captureStackTrace) {
+	    // Chrome and NodeJS
+	    Error.captureStackTrace(this, this.constructor);
+	  } else {
+	    // FF, IE 10+ and Safari 6+. Fallback for others
+	    this.stack = (new Error()).stack || '';
+	  }
+
+	  this.name = 'YAMLException';
+	  this.reason = reason;
+	  this.mark = mark;
+	  this.message = (this.reason || '(unknown reason)') + (this.mark ? ' ' + this.mark.toString() : '');
+	}
+
+
+	// Inherit from Error
+	YAMLException.prototype = Object.create(Error.prototype);
+	YAMLException.prototype.constructor = YAMLException;
+
+
+	YAMLException.prototype.toString = function toString(compact) {
+	  var result = this.name + ': ';
+
+	  result += this.reason || '(unknown reason)';
+
+	  if (!compact && this.mark) {
+	    result += ' ' + this.mark.toString();
+	  }
+
+	  return result;
+	};
+
+
+	module.exports = YAMLException;
+
+	},{}],5:[function(require,module,exports){
+	'use strict';
+
+	/*eslint-disable max-len,no-use-before-define*/
+
+	var common              = require('./common');
+	var YAMLException       = require('./exception');
+	var Mark                = require('./mark');
+	var DEFAULT_SAFE_SCHEMA = require('./schema/default_safe');
+	var DEFAULT_FULL_SCHEMA = require('./schema/default_full');
+
+
+	var _hasOwnProperty = Object.prototype.hasOwnProperty;
+
+
+	var CONTEXT_FLOW_IN   = 1;
+	var CONTEXT_FLOW_OUT  = 2;
+	var CONTEXT_BLOCK_IN  = 3;
+	var CONTEXT_BLOCK_OUT = 4;
+
+
+	var CHOMPING_CLIP  = 1;
+	var CHOMPING_STRIP = 2;
+	var CHOMPING_KEEP  = 3;
+
+
+	var PATTERN_NON_PRINTABLE         = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x84\x86-\x9F\uFFFE\uFFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF]/;
+	var PATTERN_NON_ASCII_LINE_BREAKS = /[\x85\u2028\u2029]/;
+	var PATTERN_FLOW_INDICATORS       = /[,\[\]\{\}]/;
+	var PATTERN_TAG_HANDLE            = /^(?:!|!!|![a-z\-]+!)$/i;
+	var PATTERN_TAG_URI               = /^(?:!|[^,\[\]\{\}])(?:%[0-9a-f]{2}|[0-9a-z\-#;\/\?:@&=\+\$,_\.!~\*'\(\)\[\]])*$/i;
+
+
+	function is_EOL(c) {
+	  return (c === 0x0A/* LF */) || (c === 0x0D/* CR */);
+	}
+
+	function is_WHITE_SPACE(c) {
+	  return (c === 0x09/* Tab */) || (c === 0x20/* Space */);
+	}
+
+	function is_WS_OR_EOL(c) {
+	  return (c === 0x09/* Tab */) ||
+	         (c === 0x20/* Space */) ||
+	         (c === 0x0A/* LF */) ||
+	         (c === 0x0D/* CR */);
+	}
+
+	function is_FLOW_INDICATOR(c) {
+	  return c === 0x2C/* , */ ||
+	         c === 0x5B/* [ */ ||
+	         c === 0x5D/* ] */ ||
+	         c === 0x7B/* { */ ||
+	         c === 0x7D/* } */;
+	}
+
+	function fromHexCode(c) {
+	  var lc;
+
+	  if ((0x30/* 0 */ <= c) && (c <= 0x39/* 9 */)) {
+	    return c - 0x30;
+	  }
+
+	  /*eslint-disable no-bitwise*/
+	  lc = c | 0x20;
+
+	  if ((0x61/* a */ <= lc) && (lc <= 0x66/* f */)) {
+	    return lc - 0x61 + 10;
+	  }
+
+	  return -1;
+	}
+
+	function escapedHexLen(c) {
+	  if (c === 0x78/* x */) { return 2; }
+	  if (c === 0x75/* u */) { return 4; }
+	  if (c === 0x55/* U */) { return 8; }
+	  return 0;
+	}
+
+	function fromDecimalCode(c) {
+	  if ((0x30/* 0 */ <= c) && (c <= 0x39/* 9 */)) {
+	    return c - 0x30;
+	  }
+
+	  return -1;
+	}
+
+	function simpleEscapeSequence(c) {
+	  return (c === 0x30/* 0 */) ? '\x00' :
+	        (c === 0x61/* a */) ? '\x07' :
+	        (c === 0x62/* b */) ? '\x08' :
+	        (c === 0x74/* t */) ? '\x09' :
+	        (c === 0x09/* Tab */) ? '\x09' :
+	        (c === 0x6E/* n */) ? '\x0A' :
+	        (c === 0x76/* v */) ? '\x0B' :
+	        (c === 0x66/* f */) ? '\x0C' :
+	        (c === 0x72/* r */) ? '\x0D' :
+	        (c === 0x65/* e */) ? '\x1B' :
+	        (c === 0x20/* Space */) ? ' ' :
+	        (c === 0x22/* " */) ? '\x22' :
+	        (c === 0x2F/* / */) ? '/' :
+	        (c === 0x5C/* \ */) ? '\x5C' :
+	        (c === 0x4E/* N */) ? '\x85' :
+	        (c === 0x5F/* _ */) ? '\xA0' :
+	        (c === 0x4C/* L */) ? '\u2028' :
+	        (c === 0x50/* P */) ? '\u2029' : '';
+	}
+
+	function charFromCodepoint(c) {
+	  if (c <= 0xFFFF) {
+	    return String.fromCharCode(c);
+	  }
+	  // Encode UTF-16 surrogate pair
+	  // https://en.wikipedia.org/wiki/UTF-16#Code_points_U.2B010000_to_U.2B10FFFF
+	  return String.fromCharCode(((c - 0x010000) >> 10) + 0xD800,
+	                             ((c - 0x010000) & 0x03FF) + 0xDC00);
+	}
+
+	var simpleEscapeCheck = new Array(256); // integer, for fast access
+	var simpleEscapeMap = new Array(256);
+	for (var i = 0; i < 256; i++) {
+	  simpleEscapeCheck[i] = simpleEscapeSequence(i) ? 1 : 0;
+	  simpleEscapeMap[i] = simpleEscapeSequence(i);
+	}
+
+
+	function State(input, options) {
+	  this.input = input;
+
+	  this.filename  = options['filename']  || null;
+	  this.schema    = options['schema']    || DEFAULT_FULL_SCHEMA;
+	  this.onWarning = options['onWarning'] || null;
+	  this.legacy    = options['legacy']    || false;
+	  this.json      = options['json']      || false;
+	  this.listener  = options['listener']  || null;
+
+	  this.implicitTypes = this.schema.compiledImplicit;
+	  this.typeMap       = this.schema.compiledTypeMap;
+
+	  this.length     = input.length;
+	  this.position   = 0;
+	  this.line       = 0;
+	  this.lineStart  = 0;
+	  this.lineIndent = 0;
+
+	  this.documents = [];
+
+	  /*
+	  this.version;
+	  this.checkLineBreaks;
+	  this.tagMap;
+	  this.anchorMap;
+	  this.tag;
+	  this.anchor;
+	  this.kind;
+	  this.result;*/
+
+	}
+
+
+	function generateError(state, message) {
+	  return new YAMLException(
+	    message,
+	    new Mark(state.filename, state.input, state.position, state.line, (state.position - state.lineStart)));
+	}
+
+	function throwError(state, message) {
+	  throw generateError(state, message);
+	}
+
+	function throwWarning(state, message) {
+	  if (state.onWarning) {
+	    state.onWarning.call(null, generateError(state, message));
+	  }
+	}
+
+
+	var directiveHandlers = {
+
+	  YAML: function handleYamlDirective(state, name, args) {
+
+	    var match, major, minor;
+
+	    if (state.version !== null) {
+	      throwError(state, 'duplication of %YAML directive');
+	    }
+
+	    if (args.length !== 1) {
+	      throwError(state, 'YAML directive accepts exactly one argument');
+	    }
+
+	    match = /^([0-9]+)\.([0-9]+)$/.exec(args[0]);
+
+	    if (match === null) {
+	      throwError(state, 'ill-formed argument of the YAML directive');
+	    }
+
+	    major = parseInt(match[1], 10);
+	    minor = parseInt(match[2], 10);
+
+	    if (major !== 1) {
+	      throwError(state, 'unacceptable YAML version of the document');
+	    }
+
+	    state.version = args[0];
+	    state.checkLineBreaks = (minor < 2);
+
+	    if (minor !== 1 && minor !== 2) {
+	      throwWarning(state, 'unsupported YAML version of the document');
+	    }
+	  },
+
+	  TAG: function handleTagDirective(state, name, args) {
+
+	    var handle, prefix;
+
+	    if (args.length !== 2) {
+	      throwError(state, 'TAG directive accepts exactly two arguments');
+	    }
+
+	    handle = args[0];
+	    prefix = args[1];
+
+	    if (!PATTERN_TAG_HANDLE.test(handle)) {
+	      throwError(state, 'ill-formed tag handle (first argument) of the TAG directive');
+	    }
+
+	    if (_hasOwnProperty.call(state.tagMap, handle)) {
+	      throwError(state, 'there is a previously declared suffix for "' + handle + '" tag handle');
+	    }
+
+	    if (!PATTERN_TAG_URI.test(prefix)) {
+	      throwError(state, 'ill-formed tag prefix (second argument) of the TAG directive');
+	    }
+
+	    state.tagMap[handle] = prefix;
+	  }
+	};
+
+
+	function captureSegment(state, start, end, checkJson) {
+	  var _position, _length, _character, _result;
+
+	  if (start < end) {
+	    _result = state.input.slice(start, end);
+
+	    if (checkJson) {
+	      for (_position = 0, _length = _result.length;
+	           _position < _length;
+	           _position += 1) {
+	        _character = _result.charCodeAt(_position);
+	        if (!(_character === 0x09 ||
+	              (0x20 <= _character && _character <= 0x10FFFF))) {
+	          throwError(state, 'expected valid JSON character');
+	        }
+	      }
+	    } else if (PATTERN_NON_PRINTABLE.test(_result)) {
+	      throwError(state, 'the stream contains non-printable characters');
+	    }
+
+	    state.result += _result;
+	  }
+	}
+
+	function mergeMappings(state, destination, source, overridableKeys) {
+	  var sourceKeys, key, index, quantity;
+
+	  if (!common.isObject(source)) {
+	    throwError(state, 'cannot merge mappings; the provided source object is unacceptable');
+	  }
+
+	  sourceKeys = Object.keys(source);
+
+	  for (index = 0, quantity = sourceKeys.length; index < quantity; index += 1) {
+	    key = sourceKeys[index];
+
+	    if (!_hasOwnProperty.call(destination, key)) {
+	      destination[key] = source[key];
+	      overridableKeys[key] = true;
+	    }
+	  }
+	}
+
+	function storeMappingPair(state, _result, overridableKeys, keyTag, keyNode, valueNode) {
+	  var index, quantity;
+
+	  keyNode = String(keyNode);
+
+	  if (_result === null) {
+	    _result = {};
+	  }
+
+	  if (keyTag === 'tag:yaml.org,2002:merge') {
+	    if (Array.isArray(valueNode)) {
+	      for (index = 0, quantity = valueNode.length; index < quantity; index += 1) {
+	        mergeMappings(state, _result, valueNode[index], overridableKeys);
+	      }
+	    } else {
+	      mergeMappings(state, _result, valueNode, overridableKeys);
+	    }
+	  } else {
+	    if (!state.json &&
+	        !_hasOwnProperty.call(overridableKeys, keyNode) &&
+	        _hasOwnProperty.call(_result, keyNode)) {
+	      throwError(state, 'duplicated mapping key');
+	    }
+	    _result[keyNode] = valueNode;
+	    delete overridableKeys[keyNode];
+	  }
+
+	  return _result;
+	}
+
+	function readLineBreak(state) {
+	  var ch;
+
+	  ch = state.input.charCodeAt(state.position);
+
+	  if (ch === 0x0A/* LF */) {
+	    state.position++;
+	  } else if (ch === 0x0D/* CR */) {
+	    state.position++;
+	    if (state.input.charCodeAt(state.position) === 0x0A/* LF */) {
+	      state.position++;
+	    }
+	  } else {
+	    throwError(state, 'a line break is expected');
+	  }
+
+	  state.line += 1;
+	  state.lineStart = state.position;
+	}
+
+	function skipSeparationSpace(state, allowComments, checkIndent) {
+	  var lineBreaks = 0,
+	      ch = state.input.charCodeAt(state.position);
+
+	  while (ch !== 0) {
+	    while (is_WHITE_SPACE(ch)) {
+	      ch = state.input.charCodeAt(++state.position);
+	    }
+
+	    if (allowComments && ch === 0x23/* # */) {
+	      do {
+	        ch = state.input.charCodeAt(++state.position);
+	      } while (ch !== 0x0A/* LF */ && ch !== 0x0D/* CR */ && ch !== 0);
+	    }
+
+	    if (is_EOL(ch)) {
+	      readLineBreak(state);
+
+	      ch = state.input.charCodeAt(state.position);
+	      lineBreaks++;
+	      state.lineIndent = 0;
+
+	      while (ch === 0x20/* Space */) {
+	        state.lineIndent++;
+	        ch = state.input.charCodeAt(++state.position);
+	      }
+	    } else {
+	      break;
+	    }
+	  }
+
+	  if (checkIndent !== -1 && lineBreaks !== 0 && state.lineIndent < checkIndent) {
+	    throwWarning(state, 'deficient indentation');
+	  }
+
+	  return lineBreaks;
+	}
+
+	function testDocumentSeparator(state) {
+	  var _position = state.position,
+	      ch;
+
+	  ch = state.input.charCodeAt(_position);
+
+	  // Condition state.position === state.lineStart is tested
+	  // in parent on each call, for efficiency. No needs to test here again.
+	  if ((ch === 0x2D/* - */ || ch === 0x2E/* . */) &&
+	      ch === state.input.charCodeAt(_position + 1) &&
+	      ch === state.input.charCodeAt(_position + 2)) {
+
+	    _position += 3;
+
+	    ch = state.input.charCodeAt(_position);
+
+	    if (ch === 0 || is_WS_OR_EOL(ch)) {
+	      return true;
+	    }
+	  }
+
+	  return false;
+	}
+
+	function writeFoldedLines(state, count) {
+	  if (count === 1) {
+	    state.result += ' ';
+	  } else if (count > 1) {
+	    state.result += common.repeat('\n', count - 1);
+	  }
+	}
+
+
+	function readPlainScalar(state, nodeIndent, withinFlowCollection) {
+	  var preceding,
+	      following,
+	      captureStart,
+	      captureEnd,
+	      hasPendingContent,
+	      _line,
+	      _lineStart,
+	      _lineIndent,
+	      _kind = state.kind,
+	      _result = state.result,
+	      ch;
+
+	  ch = state.input.charCodeAt(state.position);
+
+	  if (is_WS_OR_EOL(ch)      ||
+	      is_FLOW_INDICATOR(ch) ||
+	      ch === 0x23/* # */    ||
+	      ch === 0x26/* & */    ||
+	      ch === 0x2A/* * */    ||
+	      ch === 0x21/* ! */    ||
+	      ch === 0x7C/* | */    ||
+	      ch === 0x3E/* > */    ||
+	      ch === 0x27/* ' */    ||
+	      ch === 0x22/* " */    ||
+	      ch === 0x25/* % */    ||
+	      ch === 0x40/* @ */    ||
+	      ch === 0x60/* ` */) {
+	    return false;
+	  }
+
+	  if (ch === 0x3F/* ? */ || ch === 0x2D/* - */) {
+	    following = state.input.charCodeAt(state.position + 1);
+
+	    if (is_WS_OR_EOL(following) ||
+	        withinFlowCollection && is_FLOW_INDICATOR(following)) {
+	      return false;
+	    }
+	  }
+
+	  state.kind = 'scalar';
+	  state.result = '';
+	  captureStart = captureEnd = state.position;
+	  hasPendingContent = false;
+
+	  while (ch !== 0) {
+	    if (ch === 0x3A/* : */) {
+	      following = state.input.charCodeAt(state.position + 1);
+
+	      if (is_WS_OR_EOL(following) ||
+	          withinFlowCollection && is_FLOW_INDICATOR(following)) {
+	        break;
+	      }
+
+	    } else if (ch === 0x23/* # */) {
+	      preceding = state.input.charCodeAt(state.position - 1);
+
+	      if (is_WS_OR_EOL(preceding)) {
+	        break;
+	      }
+
+	    } else if ((state.position === state.lineStart && testDocumentSeparator(state)) ||
+	               withinFlowCollection && is_FLOW_INDICATOR(ch)) {
+	      break;
+
+	    } else if (is_EOL(ch)) {
+	      _line = state.line;
+	      _lineStart = state.lineStart;
+	      _lineIndent = state.lineIndent;
+	      skipSeparationSpace(state, false, -1);
+
+	      if (state.lineIndent >= nodeIndent) {
+	        hasPendingContent = true;
+	        ch = state.input.charCodeAt(state.position);
+	        continue;
+	      } else {
+	        state.position = captureEnd;
+	        state.line = _line;
+	        state.lineStart = _lineStart;
+	        state.lineIndent = _lineIndent;
+	        break;
+	      }
+	    }
+
+	    if (hasPendingContent) {
+	      captureSegment(state, captureStart, captureEnd, false);
+	      writeFoldedLines(state, state.line - _line);
+	      captureStart = captureEnd = state.position;
+	      hasPendingContent = false;
+	    }
+
+	    if (!is_WHITE_SPACE(ch)) {
+	      captureEnd = state.position + 1;
+	    }
+
+	    ch = state.input.charCodeAt(++state.position);
+	  }
+
+	  captureSegment(state, captureStart, captureEnd, false);
+
+	  if (state.result) {
+	    return true;
+	  }
+
+	  state.kind = _kind;
+	  state.result = _result;
+	  return false;
+	}
+
+	function readSingleQuotedScalar(state, nodeIndent) {
+	  var ch,
+	      captureStart, captureEnd;
+
+	  ch = state.input.charCodeAt(state.position);
+
+	  if (ch !== 0x27/* ' */) {
+	    return false;
+	  }
+
+	  state.kind = 'scalar';
+	  state.result = '';
+	  state.position++;
+	  captureStart = captureEnd = state.position;
+
+	  while ((ch = state.input.charCodeAt(state.position)) !== 0) {
+	    if (ch === 0x27/* ' */) {
+	      captureSegment(state, captureStart, state.position, true);
+	      ch = state.input.charCodeAt(++state.position);
+
+	      if (ch === 0x27/* ' */) {
+	        captureStart = captureEnd = state.position;
+	        state.position++;
+	      } else {
+	        return true;
+	      }
+
+	    } else if (is_EOL(ch)) {
+	      captureSegment(state, captureStart, captureEnd, true);
+	      writeFoldedLines(state, skipSeparationSpace(state, false, nodeIndent));
+	      captureStart = captureEnd = state.position;
+
+	    } else if (state.position === state.lineStart && testDocumentSeparator(state)) {
+	      throwError(state, 'unexpected end of the document within a single quoted scalar');
+
+	    } else {
+	      state.position++;
+	      captureEnd = state.position;
+	    }
+	  }
+
+	  throwError(state, 'unexpected end of the stream within a single quoted scalar');
+	}
+
+	function readDoubleQuotedScalar(state, nodeIndent) {
+	  var captureStart,
+	      captureEnd,
+	      hexLength,
+	      hexResult,
+	      tmp,
+	      ch;
+
+	  ch = state.input.charCodeAt(state.position);
+
+	  if (ch !== 0x22/* " */) {
+	    return false;
+	  }
+
+	  state.kind = 'scalar';
+	  state.result = '';
+	  state.position++;
+	  captureStart = captureEnd = state.position;
+
+	  while ((ch = state.input.charCodeAt(state.position)) !== 0) {
+	    if (ch === 0x22/* " */) {
+	      captureSegment(state, captureStart, state.position, true);
+	      state.position++;
+	      return true;
+
+	    } else if (ch === 0x5C/* \ */) {
+	      captureSegment(state, captureStart, state.position, true);
+	      ch = state.input.charCodeAt(++state.position);
+
+	      if (is_EOL(ch)) {
+	        skipSeparationSpace(state, false, nodeIndent);
+
+	        // TODO: rework to inline fn with no type cast?
+	      } else if (ch < 256 && simpleEscapeCheck[ch]) {
+	        state.result += simpleEscapeMap[ch];
+	        state.position++;
+
+	      } else if ((tmp = escapedHexLen(ch)) > 0) {
+	        hexLength = tmp;
+	        hexResult = 0;
+
+	        for (; hexLength > 0; hexLength--) {
+	          ch = state.input.charCodeAt(++state.position);
+
+	          if ((tmp = fromHexCode(ch)) >= 0) {
+	            hexResult = (hexResult << 4) + tmp;
+
+	          } else {
+	            throwError(state, 'expected hexadecimal character');
+	          }
+	        }
+
+	        state.result += charFromCodepoint(hexResult);
+
+	        state.position++;
+
+	      } else {
+	        throwError(state, 'unknown escape sequence');
+	      }
+
+	      captureStart = captureEnd = state.position;
+
+	    } else if (is_EOL(ch)) {
+	      captureSegment(state, captureStart, captureEnd, true);
+	      writeFoldedLines(state, skipSeparationSpace(state, false, nodeIndent));
+	      captureStart = captureEnd = state.position;
+
+	    } else if (state.position === state.lineStart && testDocumentSeparator(state)) {
+	      throwError(state, 'unexpected end of the document within a double quoted scalar');
+
+	    } else {
+	      state.position++;
+	      captureEnd = state.position;
+	    }
+	  }
+
+	  throwError(state, 'unexpected end of the stream within a double quoted scalar');
+	}
+
+	function readFlowCollection(state, nodeIndent) {
+	  var readNext = true,
+	      _line,
+	      _tag     = state.tag,
+	      _result,
+	      _anchor  = state.anchor,
+	      following,
+	      terminator,
+	      isPair,
+	      isExplicitPair,
+	      isMapping,
+	      overridableKeys = {},
+	      keyNode,
+	      keyTag,
+	      valueNode,
+	      ch;
+
+	  ch = state.input.charCodeAt(state.position);
+
+	  if (ch === 0x5B/* [ */) {
+	    terminator = 0x5D;/* ] */
+	    isMapping = false;
+	    _result = [];
+	  } else if (ch === 0x7B/* { */) {
+	    terminator = 0x7D;/* } */
+	    isMapping = true;
+	    _result = {};
+	  } else {
+	    return false;
+	  }
+
+	  if (state.anchor !== null) {
+	    state.anchorMap[state.anchor] = _result;
+	  }
+
+	  ch = state.input.charCodeAt(++state.position);
+
+	  while (ch !== 0) {
+	    skipSeparationSpace(state, true, nodeIndent);
+
+	    ch = state.input.charCodeAt(state.position);
+
+	    if (ch === terminator) {
+	      state.position++;
+	      state.tag = _tag;
+	      state.anchor = _anchor;
+	      state.kind = isMapping ? 'mapping' : 'sequence';
+	      state.result = _result;
+	      return true;
+	    } else if (!readNext) {
+	      throwError(state, 'missed comma between flow collection entries');
+	    }
+
+	    keyTag = keyNode = valueNode = null;
+	    isPair = isExplicitPair = false;
+
+	    if (ch === 0x3F/* ? */) {
+	      following = state.input.charCodeAt(state.position + 1);
+
+	      if (is_WS_OR_EOL(following)) {
+	        isPair = isExplicitPair = true;
+	        state.position++;
+	        skipSeparationSpace(state, true, nodeIndent);
+	      }
+	    }
+
+	    _line = state.line;
+	    composeNode(state, nodeIndent, CONTEXT_FLOW_IN, false, true);
+	    keyTag = state.tag;
+	    keyNode = state.result;
+	    skipSeparationSpace(state, true, nodeIndent);
+
+	    ch = state.input.charCodeAt(state.position);
+
+	    if ((isExplicitPair || state.line === _line) && ch === 0x3A/* : */) {
+	      isPair = true;
+	      ch = state.input.charCodeAt(++state.position);
+	      skipSeparationSpace(state, true, nodeIndent);
+	      composeNode(state, nodeIndent, CONTEXT_FLOW_IN, false, true);
+	      valueNode = state.result;
+	    }
+
+	    if (isMapping) {
+	      storeMappingPair(state, _result, overridableKeys, keyTag, keyNode, valueNode);
+	    } else if (isPair) {
+	      _result.push(storeMappingPair(state, null, overridableKeys, keyTag, keyNode, valueNode));
+	    } else {
+	      _result.push(keyNode);
+	    }
+
+	    skipSeparationSpace(state, true, nodeIndent);
+
+	    ch = state.input.charCodeAt(state.position);
+
+	    if (ch === 0x2C/* , */) {
+	      readNext = true;
+	      ch = state.input.charCodeAt(++state.position);
+	    } else {
+	      readNext = false;
+	    }
+	  }
+
+	  throwError(state, 'unexpected end of the stream within a flow collection');
+	}
+
+	function readBlockScalar(state, nodeIndent) {
+	  var captureStart,
+	      folding,
+	      chomping       = CHOMPING_CLIP,
+	      didReadContent = false,
+	      detectedIndent = false,
+	      textIndent     = nodeIndent,
+	      emptyLines     = 0,
+	      atMoreIndented = false,
+	      tmp,
+	      ch;
+
+	  ch = state.input.charCodeAt(state.position);
+
+	  if (ch === 0x7C/* | */) {
+	    folding = false;
+	  } else if (ch === 0x3E/* > */) {
+	    folding = true;
+	  } else {
+	    return false;
+	  }
+
+	  state.kind = 'scalar';
+	  state.result = '';
+
+	  while (ch !== 0) {
+	    ch = state.input.charCodeAt(++state.position);
+
+	    if (ch === 0x2B/* + */ || ch === 0x2D/* - */) {
+	      if (CHOMPING_CLIP === chomping) {
+	        chomping = (ch === 0x2B/* + */) ? CHOMPING_KEEP : CHOMPING_STRIP;
+	      } else {
+	        throwError(state, 'repeat of a chomping mode identifier');
+	      }
+
+	    } else if ((tmp = fromDecimalCode(ch)) >= 0) {
+	      if (tmp === 0) {
+	        throwError(state, 'bad explicit indentation width of a block scalar; it cannot be less than one');
+	      } else if (!detectedIndent) {
+	        textIndent = nodeIndent + tmp - 1;
+	        detectedIndent = true;
+	      } else {
+	        throwError(state, 'repeat of an indentation width identifier');
+	      }
+
+	    } else {
+	      break;
+	    }
+	  }
+
+	  if (is_WHITE_SPACE(ch)) {
+	    do { ch = state.input.charCodeAt(++state.position); }
+	    while (is_WHITE_SPACE(ch));
+
+	    if (ch === 0x23/* # */) {
+	      do { ch = state.input.charCodeAt(++state.position); }
+	      while (!is_EOL(ch) && (ch !== 0));
+	    }
+	  }
+
+	  while (ch !== 0) {
+	    readLineBreak(state);
+	    state.lineIndent = 0;
+
+	    ch = state.input.charCodeAt(state.position);
+
+	    while ((!detectedIndent || state.lineIndent < textIndent) &&
+	           (ch === 0x20/* Space */)) {
+	      state.lineIndent++;
+	      ch = state.input.charCodeAt(++state.position);
+	    }
+
+	    if (!detectedIndent && state.lineIndent > textIndent) {
+	      textIndent = state.lineIndent;
+	    }
+
+	    if (is_EOL(ch)) {
+	      emptyLines++;
+	      continue;
+	    }
+
+	    // End of the scalar.
+	    if (state.lineIndent < textIndent) {
+
+	      // Perform the chomping.
+	      if (chomping === CHOMPING_KEEP) {
+	        state.result += common.repeat('\n', didReadContent ? 1 + emptyLines : emptyLines);
+	      } else if (chomping === CHOMPING_CLIP) {
+	        if (didReadContent) { // i.e. only if the scalar is not empty.
+	          state.result += '\n';
+	        }
+	      }
+
+	      // Break this `while` cycle and go to the funciton's epilogue.
+	      break;
+	    }
+
+	    // Folded style: use fancy rules to handle line breaks.
+	    if (folding) {
+
+	      // Lines starting with white space characters (more-indented lines) are not folded.
+	      if (is_WHITE_SPACE(ch)) {
+	        atMoreIndented = true;
+	        // except for the first content line (cf. Example 8.1)
+	        state.result += common.repeat('\n', didReadContent ? 1 + emptyLines : emptyLines);
+
+	      // End of more-indented block.
+	      } else if (atMoreIndented) {
+	        atMoreIndented = false;
+	        state.result += common.repeat('\n', emptyLines + 1);
+
+	      // Just one line break - perceive as the same line.
+	      } else if (emptyLines === 0) {
+	        if (didReadContent) { // i.e. only if we have already read some scalar content.
+	          state.result += ' ';
+	        }
+
+	      // Several line breaks - perceive as different lines.
+	      } else {
+	        state.result += common.repeat('\n', emptyLines);
+	      }
+
+	    // Literal style: just add exact number of line breaks between content lines.
+	    } else {
+	      // Keep all line breaks except the header line break.
+	      state.result += common.repeat('\n', didReadContent ? 1 + emptyLines : emptyLines);
+	    }
+
+	    didReadContent = true;
+	    detectedIndent = true;
+	    emptyLines = 0;
+	    captureStart = state.position;
+
+	    while (!is_EOL(ch) && (ch !== 0)) {
+	      ch = state.input.charCodeAt(++state.position);
+	    }
+
+	    captureSegment(state, captureStart, state.position, false);
+	  }
+
+	  return true;
+	}
+
+	function readBlockSequence(state, nodeIndent) {
+	  var _line,
+	      _tag      = state.tag,
+	      _anchor   = state.anchor,
+	      _result   = [],
+	      following,
+	      detected  = false,
+	      ch;
+
+	  if (state.anchor !== null) {
+	    state.anchorMap[state.anchor] = _result;
+	  }
+
+	  ch = state.input.charCodeAt(state.position);
+
+	  while (ch !== 0) {
+
+	    if (ch !== 0x2D/* - */) {
+	      break;
+	    }
+
+	    following = state.input.charCodeAt(state.position + 1);
+
+	    if (!is_WS_OR_EOL(following)) {
+	      break;
+	    }
+
+	    detected = true;
+	    state.position++;
+
+	    if (skipSeparationSpace(state, true, -1)) {
+	      if (state.lineIndent <= nodeIndent) {
+	        _result.push(null);
+	        ch = state.input.charCodeAt(state.position);
+	        continue;
+	      }
+	    }
+
+	    _line = state.line;
+	    composeNode(state, nodeIndent, CONTEXT_BLOCK_IN, false, true);
+	    _result.push(state.result);
+	    skipSeparationSpace(state, true, -1);
+
+	    ch = state.input.charCodeAt(state.position);
+
+	    if ((state.line === _line || state.lineIndent > nodeIndent) && (ch !== 0)) {
+	      throwError(state, 'bad indentation of a sequence entry');
+	    } else if (state.lineIndent < nodeIndent) {
+	      break;
+	    }
+	  }
+
+	  if (detected) {
+	    state.tag = _tag;
+	    state.anchor = _anchor;
+	    state.kind = 'sequence';
+	    state.result = _result;
+	    return true;
+	  }
+	  return false;
+	}
+
+	function readBlockMapping(state, nodeIndent, flowIndent) {
+	  var following,
+	      allowCompact,
+	      _line,
+	      _tag          = state.tag,
+	      _anchor       = state.anchor,
+	      _result       = {},
+	      overridableKeys = {},
+	      keyTag        = null,
+	      keyNode       = null,
+	      valueNode     = null,
+	      atExplicitKey = false,
+	      detected      = false,
+	      ch;
+
+	  if (state.anchor !== null) {
+	    state.anchorMap[state.anchor] = _result;
+	  }
+
+	  ch = state.input.charCodeAt(state.position);
+
+	  while (ch !== 0) {
+	    following = state.input.charCodeAt(state.position + 1);
+	    _line = state.line; // Save the current line.
+
+	    //
+	    // Explicit notation case. There are two separate blocks:
+	    // first for the key (denoted by "?") and second for the value (denoted by ":")
+	    //
+	    if ((ch === 0x3F/* ? */ || ch === 0x3A/* : */) && is_WS_OR_EOL(following)) {
+
+	      if (ch === 0x3F/* ? */) {
+	        if (atExplicitKey) {
+	          storeMappingPair(state, _result, overridableKeys, keyTag, keyNode, null);
+	          keyTag = keyNode = valueNode = null;
+	        }
+
+	        detected = true;
+	        atExplicitKey = true;
+	        allowCompact = true;
+
+	      } else if (atExplicitKey) {
+	        // i.e. 0x3A/* : */ === character after the explicit key.
+	        atExplicitKey = false;
+	        allowCompact = true;
+
+	      } else {
+	        throwError(state, 'incomplete explicit mapping pair; a key node is missed');
+	      }
+
+	      state.position += 1;
+	      ch = following;
+
+	    //
+	    // Implicit notation case. Flow-style node as the key first, then ":", and the value.
+	    //
+	    } else if (composeNode(state, flowIndent, CONTEXT_FLOW_OUT, false, true)) {
+
+	      if (state.line === _line) {
+	        ch = state.input.charCodeAt(state.position);
+
+	        while (is_WHITE_SPACE(ch)) {
+	          ch = state.input.charCodeAt(++state.position);
+	        }
+
+	        if (ch === 0x3A/* : */) {
+	          ch = state.input.charCodeAt(++state.position);
+
+	          if (!is_WS_OR_EOL(ch)) {
+	            throwError(state, 'a whitespace character is expected after the key-value separator within a block mapping');
+	          }
+
+	          if (atExplicitKey) {
+	            storeMappingPair(state, _result, overridableKeys, keyTag, keyNode, null);
+	            keyTag = keyNode = valueNode = null;
+	          }
+
+	          detected = true;
+	          atExplicitKey = false;
+	          allowCompact = false;
+	          keyTag = state.tag;
+	          keyNode = state.result;
+
+	        } else if (detected) {
+	          throwError(state, 'can not read an implicit mapping pair; a colon is missed');
+
+	        } else {
+	          state.tag = _tag;
+	          state.anchor = _anchor;
+	          return true; // Keep the result of `composeNode`.
+	        }
+
+	      } else if (detected) {
+	        throwError(state, 'can not read a block mapping entry; a multiline key may not be an implicit key');
+
+	      } else {
+	        state.tag = _tag;
+	        state.anchor = _anchor;
+	        return true; // Keep the result of `composeNode`.
+	      }
+
+	    } else {
+	      break; // Reading is done. Go to the epilogue.
+	    }
+
+	    //
+	    // Common reading code for both explicit and implicit notations.
+	    //
+	    if (state.line === _line || state.lineIndent > nodeIndent) {
+	      if (composeNode(state, nodeIndent, CONTEXT_BLOCK_OUT, true, allowCompact)) {
+	        if (atExplicitKey) {
+	          keyNode = state.result;
+	        } else {
+	          valueNode = state.result;
+	        }
+	      }
+
+	      if (!atExplicitKey) {
+	        storeMappingPair(state, _result, overridableKeys, keyTag, keyNode, valueNode);
+	        keyTag = keyNode = valueNode = null;
+	      }
+
+	      skipSeparationSpace(state, true, -1);
+	      ch = state.input.charCodeAt(state.position);
+	    }
+
+	    if (state.lineIndent > nodeIndent && (ch !== 0)) {
+	      throwError(state, 'bad indentation of a mapping entry');
+	    } else if (state.lineIndent < nodeIndent) {
+	      break;
+	    }
+	  }
+
+	  //
+	  // Epilogue.
+	  //
+
+	  // Special case: last mapping's node contains only the key in explicit notation.
+	  if (atExplicitKey) {
+	    storeMappingPair(state, _result, overridableKeys, keyTag, keyNode, null);
+	  }
+
+	  // Expose the resulting mapping.
+	  if (detected) {
+	    state.tag = _tag;
+	    state.anchor = _anchor;
+	    state.kind = 'mapping';
+	    state.result = _result;
+	  }
+
+	  return detected;
+	}
+
+	function readTagProperty(state) {
+	  var _position,
+	      isVerbatim = false,
+	      isNamed    = false,
+	      tagHandle,
+	      tagName,
+	      ch;
+
+	  ch = state.input.charCodeAt(state.position);
+
+	  if (ch !== 0x21/* ! */) return false;
+
+	  if (state.tag !== null) {
+	    throwError(state, 'duplication of a tag property');
+	  }
+
+	  ch = state.input.charCodeAt(++state.position);
+
+	  if (ch === 0x3C/* < */) {
+	    isVerbatim = true;
+	    ch = state.input.charCodeAt(++state.position);
+
+	  } else if (ch === 0x21/* ! */) {
+	    isNamed = true;
+	    tagHandle = '!!';
+	    ch = state.input.charCodeAt(++state.position);
+
+	  } else {
+	    tagHandle = '!';
+	  }
+
+	  _position = state.position;
+
+	  if (isVerbatim) {
+	    do { ch = state.input.charCodeAt(++state.position); }
+	    while (ch !== 0 && ch !== 0x3E/* > */);
+
+	    if (state.position < state.length) {
+	      tagName = state.input.slice(_position, state.position);
+	      ch = state.input.charCodeAt(++state.position);
+	    } else {
+	      throwError(state, 'unexpected end of the stream within a verbatim tag');
+	    }
+	  } else {
+	    while (ch !== 0 && !is_WS_OR_EOL(ch)) {
+
+	      if (ch === 0x21/* ! */) {
+	        if (!isNamed) {
+	          tagHandle = state.input.slice(_position - 1, state.position + 1);
+
+	          if (!PATTERN_TAG_HANDLE.test(tagHandle)) {
+	            throwError(state, 'named tag handle cannot contain such characters');
+	          }
+
+	          isNamed = true;
+	          _position = state.position + 1;
+	        } else {
+	          throwError(state, 'tag suffix cannot contain exclamation marks');
+	        }
+	      }
+
+	      ch = state.input.charCodeAt(++state.position);
+	    }
+
+	    tagName = state.input.slice(_position, state.position);
+
+	    if (PATTERN_FLOW_INDICATORS.test(tagName)) {
+	      throwError(state, 'tag suffix cannot contain flow indicator characters');
+	    }
+	  }
+
+	  if (tagName && !PATTERN_TAG_URI.test(tagName)) {
+	    throwError(state, 'tag name cannot contain such characters: ' + tagName);
+	  }
+
+	  if (isVerbatim) {
+	    state.tag = tagName;
+
+	  } else if (_hasOwnProperty.call(state.tagMap, tagHandle)) {
+	    state.tag = state.tagMap[tagHandle] + tagName;
+
+	  } else if (tagHandle === '!') {
+	    state.tag = '!' + tagName;
+
+	  } else if (tagHandle === '!!') {
+	    state.tag = 'tag:yaml.org,2002:' + tagName;
+
+	  } else {
+	    throwError(state, 'undeclared tag handle "' + tagHandle + '"');
+	  }
+
+	  return true;
+	}
+
+	function readAnchorProperty(state) {
+	  var _position,
+	      ch;
+
+	  ch = state.input.charCodeAt(state.position);
+
+	  if (ch !== 0x26/* & */) return false;
+
+	  if (state.anchor !== null) {
+	    throwError(state, 'duplication of an anchor property');
+	  }
+
+	  ch = state.input.charCodeAt(++state.position);
+	  _position = state.position;
+
+	  while (ch !== 0 && !is_WS_OR_EOL(ch) && !is_FLOW_INDICATOR(ch)) {
+	    ch = state.input.charCodeAt(++state.position);
+	  }
+
+	  if (state.position === _position) {
+	    throwError(state, 'name of an anchor node must contain at least one character');
+	  }
+
+	  state.anchor = state.input.slice(_position, state.position);
+	  return true;
+	}
+
+	function readAlias(state) {
+	  var _position, alias,
+	      ch;
+
+	  ch = state.input.charCodeAt(state.position);
+
+	  if (ch !== 0x2A/* * */) return false;
+
+	  ch = state.input.charCodeAt(++state.position);
+	  _position = state.position;
+
+	  while (ch !== 0 && !is_WS_OR_EOL(ch) && !is_FLOW_INDICATOR(ch)) {
+	    ch = state.input.charCodeAt(++state.position);
+	  }
+
+	  if (state.position === _position) {
+	    throwError(state, 'name of an alias node must contain at least one character');
+	  }
+
+	  alias = state.input.slice(_position, state.position);
+
+	  if (!state.anchorMap.hasOwnProperty(alias)) {
+	    throwError(state, 'unidentified alias "' + alias + '"');
+	  }
+
+	  state.result = state.anchorMap[alias];
+	  skipSeparationSpace(state, true, -1);
+	  return true;
+	}
+
+	function composeNode(state, parentIndent, nodeContext, allowToSeek, allowCompact) {
+	  var allowBlockStyles,
+	      allowBlockScalars,
+	      allowBlockCollections,
+	      indentStatus = 1, // 1: this>parent, 0: this=parent, -1: this<parent
+	      atNewLine  = false,
+	      hasContent = false,
+	      typeIndex,
+	      typeQuantity,
+	      type,
+	      flowIndent,
+	      blockIndent;
+
+	  if (state.listener !== null) {
+	    state.listener('open', state);
+	  }
+
+	  state.tag    = null;
+	  state.anchor = null;
+	  state.kind   = null;
+	  state.result = null;
+
+	  allowBlockStyles = allowBlockScalars = allowBlockCollections =
+	    CONTEXT_BLOCK_OUT === nodeContext ||
+	    CONTEXT_BLOCK_IN  === nodeContext;
+
+	  if (allowToSeek) {
+	    if (skipSeparationSpace(state, true, -1)) {
+	      atNewLine = true;
+
+	      if (state.lineIndent > parentIndent) {
+	        indentStatus = 1;
+	      } else if (state.lineIndent === parentIndent) {
+	        indentStatus = 0;
+	      } else if (state.lineIndent < parentIndent) {
+	        indentStatus = -1;
+	      }
+	    }
+	  }
+
+	  if (indentStatus === 1) {
+	    while (readTagProperty(state) || readAnchorProperty(state)) {
+	      if (skipSeparationSpace(state, true, -1)) {
+	        atNewLine = true;
+	        allowBlockCollections = allowBlockStyles;
+
+	        if (state.lineIndent > parentIndent) {
+	          indentStatus = 1;
+	        } else if (state.lineIndent === parentIndent) {
+	          indentStatus = 0;
+	        } else if (state.lineIndent < parentIndent) {
+	          indentStatus = -1;
+	        }
+	      } else {
+	        allowBlockCollections = false;
+	      }
+	    }
+	  }
+
+	  if (allowBlockCollections) {
+	    allowBlockCollections = atNewLine || allowCompact;
+	  }
+
+	  if (indentStatus === 1 || CONTEXT_BLOCK_OUT === nodeContext) {
+	    if (CONTEXT_FLOW_IN === nodeContext || CONTEXT_FLOW_OUT === nodeContext) {
+	      flowIndent = parentIndent;
+	    } else {
+	      flowIndent = parentIndent + 1;
+	    }
+
+	    blockIndent = state.position - state.lineStart;
+
+	    if (indentStatus === 1) {
+	      if (allowBlockCollections &&
+	          (readBlockSequence(state, blockIndent) ||
+	           readBlockMapping(state, blockIndent, flowIndent)) ||
+	          readFlowCollection(state, flowIndent)) {
+	        hasContent = true;
+	      } else {
+	        if ((allowBlockScalars && readBlockScalar(state, flowIndent)) ||
+	            readSingleQuotedScalar(state, flowIndent) ||
+	            readDoubleQuotedScalar(state, flowIndent)) {
+	          hasContent = true;
+
+	        } else if (readAlias(state)) {
+	          hasContent = true;
+
+	          if (state.tag !== null || state.anchor !== null) {
+	            throwError(state, 'alias node should not have any properties');
+	          }
+
+	        } else if (readPlainScalar(state, flowIndent, CONTEXT_FLOW_IN === nodeContext)) {
+	          hasContent = true;
+
+	          if (state.tag === null) {
+	            state.tag = '?';
+	          }
+	        }
+
+	        if (state.anchor !== null) {
+	          state.anchorMap[state.anchor] = state.result;
+	        }
+	      }
+	    } else if (indentStatus === 0) {
+	      // Special case: block sequences are allowed to have same indentation level as the parent.
+	      // http://www.yaml.org/spec/1.2/spec.html#id2799784
+	      hasContent = allowBlockCollections && readBlockSequence(state, blockIndent);
+	    }
+	  }
+
+	  if (state.tag !== null && state.tag !== '!') {
+	    if (state.tag === '?') {
+	      for (typeIndex = 0, typeQuantity = state.implicitTypes.length;
+	           typeIndex < typeQuantity;
+	           typeIndex += 1) {
+	        type = state.implicitTypes[typeIndex];
+
+	        // Implicit resolving is not allowed for non-scalar types, and '?'
+	        // non-specific tag is only assigned to plain scalars. So, it isn't
+	        // needed to check for 'kind' conformity.
+
+	        if (type.resolve(state.result)) { // `state.result` updated in resolver if matched
+	          state.result = type.construct(state.result);
+	          state.tag = type.tag;
+	          if (state.anchor !== null) {
+	            state.anchorMap[state.anchor] = state.result;
+	          }
+	          break;
+	        }
+	      }
+	    } else if (_hasOwnProperty.call(state.typeMap, state.tag)) {
+	      type = state.typeMap[state.tag];
+
+	      if (state.result !== null && type.kind !== state.kind) {
+	        throwError(state, 'unacceptable node kind for !<' + state.tag + '> tag; it should be "' + type.kind + '", not "' + state.kind + '"');
+	      }
+
+	      if (!type.resolve(state.result)) { // `state.result` updated in resolver if matched
+	        throwError(state, 'cannot resolve a node with !<' + state.tag + '> explicit tag');
+	      } else {
+	        state.result = type.construct(state.result);
+	        if (state.anchor !== null) {
+	          state.anchorMap[state.anchor] = state.result;
+	        }
+	      }
+	    } else {
+	      throwError(state, 'unknown tag !<' + state.tag + '>');
+	    }
+	  }
+
+	  if (state.listener !== null) {
+	    state.listener('close', state);
+	  }
+	  return state.tag !== null ||  state.anchor !== null || hasContent;
+	}
+
+	function readDocument(state) {
+	  var documentStart = state.position,
+	      _position,
+	      directiveName,
+	      directiveArgs,
+	      hasDirectives = false,
+	      ch;
+
+	  state.version = null;
+	  state.checkLineBreaks = state.legacy;
+	  state.tagMap = {};
+	  state.anchorMap = {};
+
+	  while ((ch = state.input.charCodeAt(state.position)) !== 0) {
+	    skipSeparationSpace(state, true, -1);
+
+	    ch = state.input.charCodeAt(state.position);
+
+	    if (state.lineIndent > 0 || ch !== 0x25/* % */) {
+	      break;
+	    }
+
+	    hasDirectives = true;
+	    ch = state.input.charCodeAt(++state.position);
+	    _position = state.position;
+
+	    while (ch !== 0 && !is_WS_OR_EOL(ch)) {
+	      ch = state.input.charCodeAt(++state.position);
+	    }
+
+	    directiveName = state.input.slice(_position, state.position);
+	    directiveArgs = [];
+
+	    if (directiveName.length < 1) {
+	      throwError(state, 'directive name must not be less than one character in length');
+	    }
+
+	    while (ch !== 0) {
+	      while (is_WHITE_SPACE(ch)) {
+	        ch = state.input.charCodeAt(++state.position);
+	      }
+
+	      if (ch === 0x23/* # */) {
+	        do { ch = state.input.charCodeAt(++state.position); }
+	        while (ch !== 0 && !is_EOL(ch));
+	        break;
+	      }
+
+	      if (is_EOL(ch)) break;
+
+	      _position = state.position;
+
+	      while (ch !== 0 && !is_WS_OR_EOL(ch)) {
+	        ch = state.input.charCodeAt(++state.position);
+	      }
+
+	      directiveArgs.push(state.input.slice(_position, state.position));
+	    }
+
+	    if (ch !== 0) readLineBreak(state);
+
+	    if (_hasOwnProperty.call(directiveHandlers, directiveName)) {
+	      directiveHandlers[directiveName](state, directiveName, directiveArgs);
+	    } else {
+	      throwWarning(state, 'unknown document directive "' + directiveName + '"');
+	    }
+	  }
+
+	  skipSeparationSpace(state, true, -1);
+
+	  if (state.lineIndent === 0 &&
+	      state.input.charCodeAt(state.position)     === 0x2D/* - */ &&
+	      state.input.charCodeAt(state.position + 1) === 0x2D/* - */ &&
+	      state.input.charCodeAt(state.position + 2) === 0x2D/* - */) {
+	    state.position += 3;
+	    skipSeparationSpace(state, true, -1);
+
+	  } else if (hasDirectives) {
+	    throwError(state, 'directives end mark is expected');
+	  }
+
+	  composeNode(state, state.lineIndent - 1, CONTEXT_BLOCK_OUT, false, true);
+	  skipSeparationSpace(state, true, -1);
+
+	  if (state.checkLineBreaks &&
+	      PATTERN_NON_ASCII_LINE_BREAKS.test(state.input.slice(documentStart, state.position))) {
+	    throwWarning(state, 'non-ASCII line breaks are interpreted as content');
+	  }
+
+	  state.documents.push(state.result);
+
+	  if (state.position === state.lineStart && testDocumentSeparator(state)) {
+
+	    if (state.input.charCodeAt(state.position) === 0x2E/* . */) {
+	      state.position += 3;
+	      skipSeparationSpace(state, true, -1);
+	    }
+	    return;
+	  }
+
+	  if (state.position < (state.length - 1)) {
+	    throwError(state, 'end of the stream or a document separator is expected');
+	  } else {
+	    return;
+	  }
+	}
+
+
+	function loadDocuments(input, options) {
+	  input = String(input);
+	  options = options || {};
+
+	  if (input.length !== 0) {
+
+	    // Add tailing `\n` if not exists
+	    if (input.charCodeAt(input.length - 1) !== 0x0A/* LF */ &&
+	        input.charCodeAt(input.length - 1) !== 0x0D/* CR */) {
+	      input += '\n';
+	    }
+
+	    // Strip BOM
+	    if (input.charCodeAt(0) === 0xFEFF) {
+	      input = input.slice(1);
+	    }
+	  }
+
+	  var state = new State(input, options);
+
+	  // Use 0 as string terminator. That significantly simplifies bounds check.
+	  state.input += '\0';
+
+	  while (state.input.charCodeAt(state.position) === 0x20/* Space */) {
+	    state.lineIndent += 1;
+	    state.position += 1;
+	  }
+
+	  while (state.position < (state.length - 1)) {
+	    readDocument(state);
+	  }
+
+	  return state.documents;
+	}
+
+
+	function loadAll(input, iterator, options) {
+	  var documents = loadDocuments(input, options), index, length;
+
+	  for (index = 0, length = documents.length; index < length; index += 1) {
+	    iterator(documents[index]);
+	  }
+	}
+
+
+	function load(input, options) {
+	  var documents = loadDocuments(input, options);
+
+	  if (documents.length === 0) {
+	    /*eslint-disable no-undefined*/
+	    return undefined;
+	  } else if (documents.length === 1) {
+	    return documents[0];
+	  }
+	  throw new YAMLException('expected a single document in the stream, but found more');
+	}
+
+
+	function safeLoadAll(input, output, options) {
+	  loadAll(input, output, common.extend({ schema: DEFAULT_SAFE_SCHEMA }, options));
+	}
+
+
+	function safeLoad(input, options) {
+	  return load(input, common.extend({ schema: DEFAULT_SAFE_SCHEMA }, options));
+	}
+
+
+	module.exports.loadAll     = loadAll;
+	module.exports.load        = load;
+	module.exports.safeLoadAll = safeLoadAll;
+	module.exports.safeLoad    = safeLoad;
+
+	},{"./common":2,"./exception":4,"./mark":6,"./schema/default_full":9,"./schema/default_safe":10}],6:[function(require,module,exports){
+	'use strict';
+
+
+	var common = require('./common');
+
+
+	function Mark(name, buffer, position, line, column) {
+	  this.name     = name;
+	  this.buffer   = buffer;
+	  this.position = position;
+	  this.line     = line;
+	  this.column   = column;
+	}
+
+
+	Mark.prototype.getSnippet = function getSnippet(indent, maxLength) {
+	  var head, start, tail, end, snippet;
+
+	  if (!this.buffer) return null;
+
+	  indent = indent || 4;
+	  maxLength = maxLength || 75;
+
+	  head = '';
+	  start = this.position;
+
+	  while (start > 0 && '\x00\r\n\x85\u2028\u2029'.indexOf(this.buffer.charAt(start - 1)) === -1) {
+	    start -= 1;
+	    if (this.position - start > (maxLength / 2 - 1)) {
+	      head = ' ... ';
+	      start += 5;
+	      break;
+	    }
+	  }
+
+	  tail = '';
+	  end = this.position;
+
+	  while (end < this.buffer.length && '\x00\r\n\x85\u2028\u2029'.indexOf(this.buffer.charAt(end)) === -1) {
+	    end += 1;
+	    if (end - this.position > (maxLength / 2 - 1)) {
+	      tail = ' ... ';
+	      end -= 5;
+	      break;
+	    }
+	  }
+
+	  snippet = this.buffer.slice(start, end);
+
+	  return common.repeat(' ', indent) + head + snippet + tail + '\n' +
+	         common.repeat(' ', indent + this.position - start + head.length) + '^';
+	};
+
+
+	Mark.prototype.toString = function toString(compact) {
+	  var snippet, where = '';
+
+	  if (this.name) {
+	    where += 'in "' + this.name + '" ';
+	  }
+
+	  where += 'at line ' + (this.line + 1) + ', column ' + (this.column + 1);
+
+	  if (!compact) {
+	    snippet = this.getSnippet();
+
+	    if (snippet) {
+	      where += ':\n' + snippet;
+	    }
+	  }
+
+	  return where;
+	};
+
+
+	module.exports = Mark;
+
+	},{"./common":2}],7:[function(require,module,exports){
+	'use strict';
+
+	/*eslint-disable max-len*/
+
+	var common        = require('./common');
+	var YAMLException = require('./exception');
+	var Type          = require('./type');
+
+
+	function compileList(schema, name, result) {
+	  var exclude = [];
+
+	  schema.include.forEach(function (includedSchema) {
+	    result = compileList(includedSchema, name, result);
+	  });
+
+	  schema[name].forEach(function (currentType) {
+	    result.forEach(function (previousType, previousIndex) {
+	      if (previousType.tag === currentType.tag) {
+	        exclude.push(previousIndex);
+	      }
+	    });
+
+	    result.push(currentType);
+	  });
+
+	  return result.filter(function (type, index) {
+	    return exclude.indexOf(index) === -1;
+	  });
+	}
+
+
+	function compileMap(/* lists... */) {
+	  var result = {}, index, length;
+
+	  function collectType(type) {
+	    result[type.tag] = type;
+	  }
+
+	  for (index = 0, length = arguments.length; index < length; index += 1) {
+	    arguments[index].forEach(collectType);
+	  }
+
+	  return result;
+	}
+
+
+	function Schema(definition) {
+	  this.include  = definition.include  || [];
+	  this.implicit = definition.implicit || [];
+	  this.explicit = definition.explicit || [];
+
+	  this.implicit.forEach(function (type) {
+	    if (type.loadKind && type.loadKind !== 'scalar') {
+	      throw new YAMLException('There is a non-scalar type in the implicit list of a schema. Implicit resolving of such types is not supported.');
+	    }
+	  });
+
+	  this.compiledImplicit = compileList(this, 'implicit', []);
+	  this.compiledExplicit = compileList(this, 'explicit', []);
+	  this.compiledTypeMap  = compileMap(this.compiledImplicit, this.compiledExplicit);
+	}
+
+
+	Schema.DEFAULT = null;
+
+
+	Schema.create = function createSchema() {
+	  var schemas, types;
+
+	  switch (arguments.length) {
+	    case 1:
+	      schemas = Schema.DEFAULT;
+	      types = arguments[0];
+	      break;
+
+	    case 2:
+	      schemas = arguments[0];
+	      types = arguments[1];
+	      break;
+
+	    default:
+	      throw new YAMLException('Wrong number of arguments for Schema.create function');
+	  }
+
+	  schemas = common.toArray(schemas);
+	  types = common.toArray(types);
+
+	  if (!schemas.every(function (schema) { return schema instanceof Schema; })) {
+	    throw new YAMLException('Specified list of super schemas (or a single Schema object) contains a non-Schema object.');
+	  }
+
+	  if (!types.every(function (type) { return type instanceof Type; })) {
+	    throw new YAMLException('Specified list of YAML types (or a single Type object) contains a non-Type object.');
+	  }
+
+	  return new Schema({
+	    include: schemas,
+	    explicit: types
+	  });
+	};
+
+
+	module.exports = Schema;
+
+	},{"./common":2,"./exception":4,"./type":13}],8:[function(require,module,exports){
+	// Standard YAML's Core schema.
+	// http://www.yaml.org/spec/1.2/spec.html#id2804923
+	//
+	// NOTE: JS-YAML does not support schema-specific tag resolution restrictions.
+	// So, Core schema has no distinctions from JSON schema is JS-YAML.
+
+
+	'use strict';
+
+
+	var Schema = require('../schema');
+
+
+	module.exports = new Schema({
+	  include: [
+	    require('./json')
+	  ]
+	});
+
+	},{"../schema":7,"./json":12}],9:[function(require,module,exports){
+	// JS-YAML's default schema for `load` function.
+	// It is not described in the YAML specification.
+	//
+	// This schema is based on JS-YAML's default safe schema and includes
+	// JavaScript-specific types: !!js/undefined, !!js/regexp and !!js/function.
+	//
+	// Also this schema is used as default base schema at `Schema.create` function.
+
+
+	'use strict';
+
+
+	var Schema = require('../schema');
+
+
+	module.exports = Schema.DEFAULT = new Schema({
+	  include: [
+	    require('./default_safe')
+	  ],
+	  explicit: [
+	    require('../type/js/undefined'),
+	    require('../type/js/regexp'),
+	    require('../type/js/function')
+	  ]
+	});
+
+	},{"../schema":7,"../type/js/function":18,"../type/js/regexp":19,"../type/js/undefined":20,"./default_safe":10}],10:[function(require,module,exports){
+	// JS-YAML's default schema for `safeLoad` function.
+	// It is not described in the YAML specification.
+	//
+	// This schema is based on standard YAML's Core schema and includes most of
+	// extra types described at YAML tag repository. (http://yaml.org/type/)
+
+
+	'use strict';
+
+
+	var Schema = require('../schema');
+
+
+	module.exports = new Schema({
+	  include: [
+	    require('./core')
+	  ],
+	  implicit: [
+	    require('../type/timestamp'),
+	    require('../type/merge')
+	  ],
+	  explicit: [
+	    require('../type/binary'),
+	    require('../type/omap'),
+	    require('../type/pairs'),
+	    require('../type/set')
+	  ]
+	});
+
+	},{"../schema":7,"../type/binary":14,"../type/merge":22,"../type/omap":24,"../type/pairs":25,"../type/set":27,"../type/timestamp":29,"./core":8}],11:[function(require,module,exports){
+	// Standard YAML's Failsafe schema.
+	// http://www.yaml.org/spec/1.2/spec.html#id2802346
+
+
+	'use strict';
+
+
+	var Schema = require('../schema');
+
+
+	module.exports = new Schema({
+	  explicit: [
+	    require('../type/str'),
+	    require('../type/seq'),
+	    require('../type/map')
+	  ]
+	});
+
+	},{"../schema":7,"../type/map":21,"../type/seq":26,"../type/str":28}],12:[function(require,module,exports){
+	// Standard YAML's JSON schema.
+	// http://www.yaml.org/spec/1.2/spec.html#id2803231
+	//
+	// NOTE: JS-YAML does not support schema-specific tag resolution restrictions.
+	// So, this schema is not such strict as defined in the YAML specification.
+	// It allows numbers in binary notaion, use `Null` and `NULL` as `null`, etc.
+
+
+	'use strict';
+
+
+	var Schema = require('../schema');
+
+
+	module.exports = new Schema({
+	  include: [
+	    require('./failsafe')
+	  ],
+	  implicit: [
+	    require('../type/null'),
+	    require('../type/bool'),
+	    require('../type/int'),
+	    require('../type/float')
+	  ]
+	});
+
+	},{"../schema":7,"../type/bool":15,"../type/float":16,"../type/int":17,"../type/null":23,"./failsafe":11}],13:[function(require,module,exports){
+	'use strict';
+
+	var YAMLException = require('./exception');
+
+	var TYPE_CONSTRUCTOR_OPTIONS = [
+	  'kind',
+	  'resolve',
+	  'construct',
+	  'instanceOf',
+	  'predicate',
+	  'represent',
+	  'defaultStyle',
+	  'styleAliases'
+	];
+
+	var YAML_NODE_KINDS = [
+	  'scalar',
+	  'sequence',
+	  'mapping'
+	];
+
+	function compileStyleAliases(map) {
+	  var result = {};
+
+	  if (map !== null) {
+	    Object.keys(map).forEach(function (style) {
+	      map[style].forEach(function (alias) {
+	        result[String(alias)] = style;
+	      });
+	    });
+	  }
+
+	  return result;
+	}
+
+	function Type(tag, options) {
+	  options = options || {};
+
+	  Object.keys(options).forEach(function (name) {
+	    if (TYPE_CONSTRUCTOR_OPTIONS.indexOf(name) === -1) {
+	      throw new YAMLException('Unknown option "' + name + '" is met in definition of "' + tag + '" YAML type.');
+	    }
+	  });
+
+	  // TODO: Add tag format check.
+	  this.tag          = tag;
+	  this.kind         = options['kind']         || null;
+	  this.resolve      = options['resolve']      || function () { return true; };
+	  this.construct    = options['construct']    || function (data) { return data; };
+	  this.instanceOf   = options['instanceOf']   || null;
+	  this.predicate    = options['predicate']    || null;
+	  this.represent    = options['represent']    || null;
+	  this.defaultStyle = options['defaultStyle'] || null;
+	  this.styleAliases = compileStyleAliases(options['styleAliases'] || null);
+
+	  if (YAML_NODE_KINDS.indexOf(this.kind) === -1) {
+	    throw new YAMLException('Unknown kind "' + this.kind + '" is specified for "' + tag + '" YAML type.');
+	  }
+	}
+
+	module.exports = Type;
+
+	},{"./exception":4}],14:[function(require,module,exports){
+	'use strict';
+
+	/*eslint-disable no-bitwise*/
+
+	var NodeBuffer;
+
+	try {
+	  // A trick for browserified version, to not include `Buffer` shim
+	  var _require = require;
+	  NodeBuffer = _require('buffer').Buffer;
+	} catch (__) {}
+
+	var Type       = require('../type');
+
+
+	// [ 64, 65, 66 ] -> [ padding, CR, LF ]
+	var BASE64_MAP = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=\n\r';
+
+
+	function resolveYamlBinary(data) {
+	  if (data === null) return false;
+
+	  var code, idx, bitlen = 0, max = data.length, map = BASE64_MAP;
+
+	  // Convert one by one.
+	  for (idx = 0; idx < max; idx++) {
+	    code = map.indexOf(data.charAt(idx));
+
+	    // Skip CR/LF
+	    if (code > 64) continue;
+
+	    // Fail on illegal characters
+	    if (code < 0) return false;
+
+	    bitlen += 6;
+	  }
+
+	  // If there are any bits left, source was corrupted
+	  return (bitlen % 8) === 0;
+	}
+
+	function constructYamlBinary(data) {
+	  var idx, tailbits,
+	      input = data.replace(/[\r\n=]/g, ''), // remove CR/LF & padding to simplify scan
+	      max = input.length,
+	      map = BASE64_MAP,
+	      bits = 0,
+	      result = [];
+
+	  // Collect by 6*4 bits (3 bytes)
+
+	  for (idx = 0; idx < max; idx++) {
+	    if ((idx % 4 === 0) && idx) {
+	      result.push((bits >> 16) & 0xFF);
+	      result.push((bits >> 8) & 0xFF);
+	      result.push(bits & 0xFF);
+	    }
+
+	    bits = (bits << 6) | map.indexOf(input.charAt(idx));
+	  }
+
+	  // Dump tail
+
+	  tailbits = (max % 4) * 6;
+
+	  if (tailbits === 0) {
+	    result.push((bits >> 16) & 0xFF);
+	    result.push((bits >> 8) & 0xFF);
+	    result.push(bits & 0xFF);
+	  } else if (tailbits === 18) {
+	    result.push((bits >> 10) & 0xFF);
+	    result.push((bits >> 2) & 0xFF);
+	  } else if (tailbits === 12) {
+	    result.push((bits >> 4) & 0xFF);
+	  }
+
+	  // Wrap into Buffer for NodeJS and leave Array for browser
+	  if (NodeBuffer) return new NodeBuffer(result);
+
+	  return result;
+	}
+
+	function representYamlBinary(object /*, style*/) {
+	  var result = '', bits = 0, idx, tail,
+	      max = object.length,
+	      map = BASE64_MAP;
+
+	  // Convert every three bytes to 4 ASCII characters.
+
+	  for (idx = 0; idx < max; idx++) {
+	    if ((idx % 3 === 0) && idx) {
+	      result += map[(bits >> 18) & 0x3F];
+	      result += map[(bits >> 12) & 0x3F];
+	      result += map[(bits >> 6) & 0x3F];
+	      result += map[bits & 0x3F];
+	    }
+
+	    bits = (bits << 8) + object[idx];
+	  }
+
+	  // Dump tail
+
+	  tail = max % 3;
+
+	  if (tail === 0) {
+	    result += map[(bits >> 18) & 0x3F];
+	    result += map[(bits >> 12) & 0x3F];
+	    result += map[(bits >> 6) & 0x3F];
+	    result += map[bits & 0x3F];
+	  } else if (tail === 2) {
+	    result += map[(bits >> 10) & 0x3F];
+	    result += map[(bits >> 4) & 0x3F];
+	    result += map[(bits << 2) & 0x3F];
+	    result += map[64];
+	  } else if (tail === 1) {
+	    result += map[(bits >> 2) & 0x3F];
+	    result += map[(bits << 4) & 0x3F];
+	    result += map[64];
+	    result += map[64];
+	  }
+
+	  return result;
+	}
+
+	function isBinary(object) {
+	  return NodeBuffer && NodeBuffer.isBuffer(object);
+	}
+
+	module.exports = new Type('tag:yaml.org,2002:binary', {
+	  kind: 'scalar',
+	  resolve: resolveYamlBinary,
+	  construct: constructYamlBinary,
+	  predicate: isBinary,
+	  represent: representYamlBinary
+	});
+
+	},{"../type":13}],15:[function(require,module,exports){
+	'use strict';
+
+	var Type = require('../type');
+
+	function resolveYamlBoolean(data) {
+	  if (data === null) return false;
+
+	  var max = data.length;
+
+	  return (max === 4 && (data === 'true' || data === 'True' || data === 'TRUE')) ||
+	         (max === 5 && (data === 'false' || data === 'False' || data === 'FALSE'));
+	}
+
+	function constructYamlBoolean(data) {
+	  return data === 'true' ||
+	         data === 'True' ||
+	         data === 'TRUE';
+	}
+
+	function isBoolean(object) {
+	  return Object.prototype.toString.call(object) === '[object Boolean]';
+	}
+
+	module.exports = new Type('tag:yaml.org,2002:bool', {
+	  kind: 'scalar',
+	  resolve: resolveYamlBoolean,
+	  construct: constructYamlBoolean,
+	  predicate: isBoolean,
+	  represent: {
+	    lowercase: function (object) { return object ? 'true' : 'false'; },
+	    uppercase: function (object) { return object ? 'TRUE' : 'FALSE'; },
+	    camelcase: function (object) { return object ? 'True' : 'False'; }
+	  },
+	  defaultStyle: 'lowercase'
+	});
+
+	},{"../type":13}],16:[function(require,module,exports){
+	'use strict';
+
+	var common = require('../common');
+	var Type   = require('../type');
+
+	var YAML_FLOAT_PATTERN = new RegExp(
+	  '^(?:[-+]?(?:[0-9][0-9_]*)\\.[0-9_]*(?:[eE][-+][0-9]+)?' +
+	  '|\\.[0-9_]+(?:[eE][-+][0-9]+)?' +
+	  '|[-+]?[0-9][0-9_]*(?::[0-5]?[0-9])+\\.[0-9_]*' +
+	  '|[-+]?\\.(?:inf|Inf|INF)' +
+	  '|\\.(?:nan|NaN|NAN))$');
+
+	function resolveYamlFloat(data) {
+	  if (data === null) return false;
+
+	  if (!YAML_FLOAT_PATTERN.test(data)) return false;
+
+	  return true;
+	}
+
+	function constructYamlFloat(data) {
+	  var value, sign, base, digits;
+
+	  value  = data.replace(/_/g, '').toLowerCase();
+	  sign   = value[0] === '-' ? -1 : 1;
+	  digits = [];
+
+	  if ('+-'.indexOf(value[0]) >= 0) {
+	    value = value.slice(1);
+	  }
+
+	  if (value === '.inf') {
+	    return (sign === 1) ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY;
+
+	  } else if (value === '.nan') {
+	    return NaN;
+
+	  } else if (value.indexOf(':') >= 0) {
+	    value.split(':').forEach(function (v) {
+	      digits.unshift(parseFloat(v, 10));
+	    });
+
+	    value = 0.0;
+	    base = 1;
+
+	    digits.forEach(function (d) {
+	      value += d * base;
+	      base *= 60;
+	    });
+
+	    return sign * value;
+
+	  }
+	  return sign * parseFloat(value, 10);
+	}
+
+
+	var SCIENTIFIC_WITHOUT_DOT = /^[-+]?[0-9]+e/;
+
+	function representYamlFloat(object, style) {
+	  var res;
+
+	  if (isNaN(object)) {
+	    switch (style) {
+	      case 'lowercase': return '.nan';
+	      case 'uppercase': return '.NAN';
+	      case 'camelcase': return '.NaN';
+	    }
+	  } else if (Number.POSITIVE_INFINITY === object) {
+	    switch (style) {
+	      case 'lowercase': return '.inf';
+	      case 'uppercase': return '.INF';
+	      case 'camelcase': return '.Inf';
+	    }
+	  } else if (Number.NEGATIVE_INFINITY === object) {
+	    switch (style) {
+	      case 'lowercase': return '-.inf';
+	      case 'uppercase': return '-.INF';
+	      case 'camelcase': return '-.Inf';
+	    }
+	  } else if (common.isNegativeZero(object)) {
+	    return '-0.0';
+	  }
+
+	  res = object.toString(10);
+
+	  // JS stringifier can build scientific format without dots: 5e-100,
+	  // while YAML requres dot: 5.e-100. Fix it with simple hack
+
+	  return SCIENTIFIC_WITHOUT_DOT.test(res) ? res.replace('e', '.e') : res;
+	}
+
+	function isFloat(object) {
+	  return (Object.prototype.toString.call(object) === '[object Number]') &&
+	         (object % 1 !== 0 || common.isNegativeZero(object));
+	}
+
+	module.exports = new Type('tag:yaml.org,2002:float', {
+	  kind: 'scalar',
+	  resolve: resolveYamlFloat,
+	  construct: constructYamlFloat,
+	  predicate: isFloat,
+	  represent: representYamlFloat,
+	  defaultStyle: 'lowercase'
+	});
+
+	},{"../common":2,"../type":13}],17:[function(require,module,exports){
+	'use strict';
+
+	var common = require('../common');
+	var Type   = require('../type');
+
+	function isHexCode(c) {
+	  return ((0x30/* 0 */ <= c) && (c <= 0x39/* 9 */)) ||
+	         ((0x41/* A */ <= c) && (c <= 0x46/* F */)) ||
+	         ((0x61/* a */ <= c) && (c <= 0x66/* f */));
+	}
+
+	function isOctCode(c) {
+	  return ((0x30/* 0 */ <= c) && (c <= 0x37/* 7 */));
+	}
+
+	function isDecCode(c) {
+	  return ((0x30/* 0 */ <= c) && (c <= 0x39/* 9 */));
+	}
+
+	function resolveYamlInteger(data) {
+	  if (data === null) return false;
+
+	  var max = data.length,
+	      index = 0,
+	      hasDigits = false,
+	      ch;
+
+	  if (!max) return false;
+
+	  ch = data[index];
+
+	  // sign
+	  if (ch === '-' || ch === '+') {
+	    ch = data[++index];
+	  }
+
+	  if (ch === '0') {
+	    // 0
+	    if (index + 1 === max) return true;
+	    ch = data[++index];
+
+	    // base 2, base 8, base 16
+
+	    if (ch === 'b') {
+	      // base 2
+	      index++;
+
+	      for (; index < max; index++) {
+	        ch = data[index];
+	        if (ch === '_') continue;
+	        if (ch !== '0' && ch !== '1') return false;
+	        hasDigits = true;
+	      }
+	      return hasDigits;
+	    }
+
+
+	    if (ch === 'x') {
+	      // base 16
+	      index++;
+
+	      for (; index < max; index++) {
+	        ch = data[index];
+	        if (ch === '_') continue;
+	        if (!isHexCode(data.charCodeAt(index))) return false;
+	        hasDigits = true;
+	      }
+	      return hasDigits;
+	    }
+
+	    // base 8
+	    for (; index < max; index++) {
+	      ch = data[index];
+	      if (ch === '_') continue;
+	      if (!isOctCode(data.charCodeAt(index))) return false;
+	      hasDigits = true;
+	    }
+	    return hasDigits;
+	  }
+
+	  // base 10 (except 0) or base 60
+
+	  for (; index < max; index++) {
+	    ch = data[index];
+	    if (ch === '_') continue;
+	    if (ch === ':') break;
+	    if (!isDecCode(data.charCodeAt(index))) {
+	      return false;
+	    }
+	    hasDigits = true;
+	  }
+
+	  if (!hasDigits) return false;
+
+	  // if !base60 - done;
+	  if (ch !== ':') return true;
+
+	  // base60 almost not used, no needs to optimize
+	  return /^(:[0-5]?[0-9])+$/.test(data.slice(index));
+	}
+
+	function constructYamlInteger(data) {
+	  var value = data, sign = 1, ch, base, digits = [];
+
+	  if (value.indexOf('_') !== -1) {
+	    value = value.replace(/_/g, '');
+	  }
+
+	  ch = value[0];
+
+	  if (ch === '-' || ch === '+') {
+	    if (ch === '-') sign = -1;
+	    value = value.slice(1);
+	    ch = value[0];
+	  }
+
+	  if (value === '0') return 0;
+
+	  if (ch === '0') {
+	    if (value[1] === 'b') return sign * parseInt(value.slice(2), 2);
+	    if (value[1] === 'x') return sign * parseInt(value, 16);
+	    return sign * parseInt(value, 8);
+	  }
+
+	  if (value.indexOf(':') !== -1) {
+	    value.split(':').forEach(function (v) {
+	      digits.unshift(parseInt(v, 10));
+	    });
+
+	    value = 0;
+	    base = 1;
+
+	    digits.forEach(function (d) {
+	      value += (d * base);
+	      base *= 60;
+	    });
+
+	    return sign * value;
+
+	  }
+
+	  return sign * parseInt(value, 10);
+	}
+
+	function isInteger(object) {
+	  return (Object.prototype.toString.call(object)) === '[object Number]' &&
+	         (object % 1 === 0 && !common.isNegativeZero(object));
+	}
+
+	module.exports = new Type('tag:yaml.org,2002:int', {
+	  kind: 'scalar',
+	  resolve: resolveYamlInteger,
+	  construct: constructYamlInteger,
+	  predicate: isInteger,
+	  represent: {
+	    binary:      function (object) { return '0b' + object.toString(2); },
+	    octal:       function (object) { return '0'  + object.toString(8); },
+	    decimal:     function (object) { return        object.toString(10); },
+	    hexadecimal: function (object) { return '0x' + object.toString(16).toUpperCase(); }
+	  },
+	  defaultStyle: 'decimal',
+	  styleAliases: {
+	    binary:      [ 2,  'bin' ],
+	    octal:       [ 8,  'oct' ],
+	    decimal:     [ 10, 'dec' ],
+	    hexadecimal: [ 16, 'hex' ]
+	  }
+	});
+
+	},{"../common":2,"../type":13}],18:[function(require,module,exports){
+	'use strict';
+
+	var esprima;
+
+	// Browserified version does not have esprima
+	//
+	// 1. For node.js just require module as deps
+	// 2. For browser try to require mudule via external AMD system.
+	//    If not found - try to fallback to window.esprima. If not
+	//    found too - then fail to parse.
+	//
+	try {
+	  // workaround to exclude package from browserify list.
+	  var _require = require;
+	  esprima = _require('esprima');
+	} catch (_) {
+	  /*global window */
+	  if (typeof window !== 'undefined') esprima = window.esprima;
+	}
+
+	var Type = require('../../type');
+
+	function resolveJavascriptFunction(data) {
+	  if (data === null) return false;
+
+	  try {
+	    var source = '(' + data + ')',
+	        ast    = esprima.parse(source, { range: true });
+
+	    if (ast.type                    !== 'Program'             ||
+	        ast.body.length             !== 1                     ||
+	        ast.body[0].type            !== 'ExpressionStatement' ||
+	        ast.body[0].expression.type !== 'FunctionExpression') {
+	      return false;
+	    }
+
+	    return true;
+	  } catch (err) {
+	    return false;
+	  }
+	}
+
+	function constructJavascriptFunction(data) {
+	  /*jslint evil:true*/
+
+	  var source = '(' + data + ')',
+	      ast    = esprima.parse(source, { range: true }),
+	      params = [],
+	      body;
+
+	  if (ast.type                    !== 'Program'             ||
+	      ast.body.length             !== 1                     ||
+	      ast.body[0].type            !== 'ExpressionStatement' ||
+	      ast.body[0].expression.type !== 'FunctionExpression') {
+	    throw new Error('Failed to resolve function');
+	  }
+
+	  ast.body[0].expression.params.forEach(function (param) {
+	    params.push(param.name);
+	  });
+
+	  body = ast.body[0].expression.body.range;
+
+	  // Esprima's ranges include the first '{' and the last '}' characters on
+	  // function expressions. So cut them out.
+	  /*eslint-disable no-new-func*/
+	  return new Function(params, source.slice(body[0] + 1, body[1] - 1));
+	}
+
+	function representJavascriptFunction(object /*, style*/) {
+	  return object.toString();
+	}
+
+	function isFunction(object) {
+	  return Object.prototype.toString.call(object) === '[object Function]';
+	}
+
+	module.exports = new Type('tag:yaml.org,2002:js/function', {
+	  kind: 'scalar',
+	  resolve: resolveJavascriptFunction,
+	  construct: constructJavascriptFunction,
+	  predicate: isFunction,
+	  represent: representJavascriptFunction
+	});
+
+	},{"../../type":13}],19:[function(require,module,exports){
+	'use strict';
+
+	var Type = require('../../type');
+
+	function resolveJavascriptRegExp(data) {
+	  if (data === null) return false;
+	  if (data.length === 0) return false;
+
+	  var regexp = data,
+	      tail   = /\/([gim]*)$/.exec(data),
+	      modifiers = '';
+
+	  // if regexp starts with '/' it can have modifiers and must be properly closed
+	  // `/foo/gim` - modifiers tail can be maximum 3 chars
+	  if (regexp[0] === '/') {
+	    if (tail) modifiers = tail[1];
+
+	    if (modifiers.length > 3) return false;
+	    // if expression starts with /, is should be properly terminated
+	    if (regexp[regexp.length - modifiers.length - 1] !== '/') return false;
+	  }
+
+	  return true;
+	}
+
+	function constructJavascriptRegExp(data) {
+	  var regexp = data,
+	      tail   = /\/([gim]*)$/.exec(data),
+	      modifiers = '';
+
+	  // `/foo/gim` - tail can be maximum 4 chars
+	  if (regexp[0] === '/') {
+	    if (tail) modifiers = tail[1];
+	    regexp = regexp.slice(1, regexp.length - modifiers.length - 1);
+	  }
+
+	  return new RegExp(regexp, modifiers);
+	}
+
+	function representJavascriptRegExp(object /*, style*/) {
+	  var result = '/' + object.source + '/';
+
+	  if (object.global) result += 'g';
+	  if (object.multiline) result += 'm';
+	  if (object.ignoreCase) result += 'i';
+
+	  return result;
+	}
+
+	function isRegExp(object) {
+	  return Object.prototype.toString.call(object) === '[object RegExp]';
+	}
+
+	module.exports = new Type('tag:yaml.org,2002:js/regexp', {
+	  kind: 'scalar',
+	  resolve: resolveJavascriptRegExp,
+	  construct: constructJavascriptRegExp,
+	  predicate: isRegExp,
+	  represent: representJavascriptRegExp
+	});
+
+	},{"../../type":13}],20:[function(require,module,exports){
+	'use strict';
+
+	var Type = require('../../type');
+
+	function resolveJavascriptUndefined() {
+	  return true;
+	}
+
+	function constructJavascriptUndefined() {
+	  /*eslint-disable no-undefined*/
+	  return undefined;
+	}
+
+	function representJavascriptUndefined() {
+	  return '';
+	}
+
+	function isUndefined(object) {
+	  return typeof object === 'undefined';
+	}
+
+	module.exports = new Type('tag:yaml.org,2002:js/undefined', {
+	  kind: 'scalar',
+	  resolve: resolveJavascriptUndefined,
+	  construct: constructJavascriptUndefined,
+	  predicate: isUndefined,
+	  represent: representJavascriptUndefined
+	});
+
+	},{"../../type":13}],21:[function(require,module,exports){
+	'use strict';
+
+	var Type = require('../type');
+
+	module.exports = new Type('tag:yaml.org,2002:map', {
+	  kind: 'mapping',
+	  construct: function (data) { return data !== null ? data : {}; }
+	});
+
+	},{"../type":13}],22:[function(require,module,exports){
+	'use strict';
+
+	var Type = require('../type');
+
+	function resolveYamlMerge(data) {
+	  return data === '<<' || data === null;
+	}
+
+	module.exports = new Type('tag:yaml.org,2002:merge', {
+	  kind: 'scalar',
+	  resolve: resolveYamlMerge
+	});
+
+	},{"../type":13}],23:[function(require,module,exports){
+	'use strict';
+
+	var Type = require('../type');
+
+	function resolveYamlNull(data) {
+	  if (data === null) return true;
+
+	  var max = data.length;
+
+	  return (max === 1 && data === '~') ||
+	         (max === 4 && (data === 'null' || data === 'Null' || data === 'NULL'));
+	}
+
+	function constructYamlNull() {
+	  return null;
+	}
+
+	function isNull(object) {
+	  return object === null;
+	}
+
+	module.exports = new Type('tag:yaml.org,2002:null', {
+	  kind: 'scalar',
+	  resolve: resolveYamlNull,
+	  construct: constructYamlNull,
+	  predicate: isNull,
+	  represent: {
+	    canonical: function () { return '~';    },
+	    lowercase: function () { return 'null'; },
+	    uppercase: function () { return 'NULL'; },
+	    camelcase: function () { return 'Null'; }
+	  },
+	  defaultStyle: 'lowercase'
+	});
+
+	},{"../type":13}],24:[function(require,module,exports){
+	'use strict';
+
+	var Type = require('../type');
+
+	var _hasOwnProperty = Object.prototype.hasOwnProperty;
+	var _toString       = Object.prototype.toString;
+
+	function resolveYamlOmap(data) {
+	  if (data === null) return true;
+
+	  var objectKeys = [], index, length, pair, pairKey, pairHasKey,
+	      object = data;
+
+	  for (index = 0, length = object.length; index < length; index += 1) {
+	    pair = object[index];
+	    pairHasKey = false;
+
+	    if (_toString.call(pair) !== '[object Object]') return false;
+
+	    for (pairKey in pair) {
+	      if (_hasOwnProperty.call(pair, pairKey)) {
+	        if (!pairHasKey) pairHasKey = true;
+	        else return false;
+	      }
+	    }
+
+	    if (!pairHasKey) return false;
+
+	    if (objectKeys.indexOf(pairKey) === -1) objectKeys.push(pairKey);
+	    else return false;
+	  }
+
+	  return true;
+	}
+
+	function constructYamlOmap(data) {
+	  return data !== null ? data : [];
+	}
+
+	module.exports = new Type('tag:yaml.org,2002:omap', {
+	  kind: 'sequence',
+	  resolve: resolveYamlOmap,
+	  construct: constructYamlOmap
+	});
+
+	},{"../type":13}],25:[function(require,module,exports){
+	'use strict';
+
+	var Type = require('../type');
+
+	var _toString = Object.prototype.toString;
+
+	function resolveYamlPairs(data) {
+	  if (data === null) return true;
+
+	  var index, length, pair, keys, result,
+	      object = data;
+
+	  result = new Array(object.length);
+
+	  for (index = 0, length = object.length; index < length; index += 1) {
+	    pair = object[index];
+
+	    if (_toString.call(pair) !== '[object Object]') return false;
+
+	    keys = Object.keys(pair);
+
+	    if (keys.length !== 1) return false;
+
+	    result[index] = [ keys[0], pair[keys[0]] ];
+	  }
+
+	  return true;
+	}
+
+	function constructYamlPairs(data) {
+	  if (data === null) return [];
+
+	  var index, length, pair, keys, result,
+	      object = data;
+
+	  result = new Array(object.length);
+
+	  for (index = 0, length = object.length; index < length; index += 1) {
+	    pair = object[index];
+
+	    keys = Object.keys(pair);
+
+	    result[index] = [ keys[0], pair[keys[0]] ];
+	  }
+
+	  return result;
+	}
+
+	module.exports = new Type('tag:yaml.org,2002:pairs', {
+	  kind: 'sequence',
+	  resolve: resolveYamlPairs,
+	  construct: constructYamlPairs
+	});
+
+	},{"../type":13}],26:[function(require,module,exports){
+	'use strict';
+
+	var Type = require('../type');
+
+	module.exports = new Type('tag:yaml.org,2002:seq', {
+	  kind: 'sequence',
+	  construct: function (data) { return data !== null ? data : []; }
+	});
+
+	},{"../type":13}],27:[function(require,module,exports){
+	'use strict';
+
+	var Type = require('../type');
+
+	var _hasOwnProperty = Object.prototype.hasOwnProperty;
+
+	function resolveYamlSet(data) {
+	  if (data === null) return true;
+
+	  var key, object = data;
+
+	  for (key in object) {
+	    if (_hasOwnProperty.call(object, key)) {
+	      if (object[key] !== null) return false;
+	    }
+	  }
+
+	  return true;
+	}
+
+	function constructYamlSet(data) {
+	  return data !== null ? data : {};
+	}
+
+	module.exports = new Type('tag:yaml.org,2002:set', {
+	  kind: 'mapping',
+	  resolve: resolveYamlSet,
+	  construct: constructYamlSet
+	});
+
+	},{"../type":13}],28:[function(require,module,exports){
+	'use strict';
+
+	var Type = require('../type');
+
+	module.exports = new Type('tag:yaml.org,2002:str', {
+	  kind: 'scalar',
+	  construct: function (data) { return data !== null ? data : ''; }
+	});
+
+	},{"../type":13}],29:[function(require,module,exports){
+	'use strict';
+
+	var Type = require('../type');
+
+	var YAML_DATE_REGEXP = new RegExp(
+	  '^([0-9][0-9][0-9][0-9])'          + // [1] year
+	  '-([0-9][0-9])'                    + // [2] month
+	  '-([0-9][0-9])$');                   // [3] day
+
+	var YAML_TIMESTAMP_REGEXP = new RegExp(
+	  '^([0-9][0-9][0-9][0-9])'          + // [1] year
+	  '-([0-9][0-9]?)'                   + // [2] month
+	  '-([0-9][0-9]?)'                   + // [3] day
+	  '(?:[Tt]|[ \\t]+)'                 + // ...
+	  '([0-9][0-9]?)'                    + // [4] hour
+	  ':([0-9][0-9])'                    + // [5] minute
+	  ':([0-9][0-9])'                    + // [6] second
+	  '(?:\\.([0-9]*))?'                 + // [7] fraction
+	  '(?:[ \\t]*(Z|([-+])([0-9][0-9]?)' + // [8] tz [9] tz_sign [10] tz_hour
+	  '(?::([0-9][0-9]))?))?$');           // [11] tz_minute
+
+	function resolveYamlTimestamp(data) {
+	  if (data === null) return false;
+	  if (YAML_DATE_REGEXP.exec(data) !== null) return true;
+	  if (YAML_TIMESTAMP_REGEXP.exec(data) !== null) return true;
+	  return false;
+	}
+
+	function constructYamlTimestamp(data) {
+	  var match, year, month, day, hour, minute, second, fraction = 0,
+	      delta = null, tz_hour, tz_minute, date;
+
+	  match = YAML_DATE_REGEXP.exec(data);
+	  if (match === null) match = YAML_TIMESTAMP_REGEXP.exec(data);
+
+	  if (match === null) throw new Error('Date resolve error');
+
+	  // match: [1] year [2] month [3] day
+
+	  year = +(match[1]);
+	  month = +(match[2]) - 1; // JS month starts with 0
+	  day = +(match[3]);
+
+	  if (!match[4]) { // no hour
+	    return new Date(Date.UTC(year, month, day));
+	  }
+
+	  // match: [4] hour [5] minute [6] second [7] fraction
+
+	  hour = +(match[4]);
+	  minute = +(match[5]);
+	  second = +(match[6]);
+
+	  if (match[7]) {
+	    fraction = match[7].slice(0, 3);
+	    while (fraction.length < 3) { // milli-seconds
+	      fraction += '0';
+	    }
+	    fraction = +fraction;
+	  }
+
+	  // match: [8] tz [9] tz_sign [10] tz_hour [11] tz_minute
+
+	  if (match[9]) {
+	    tz_hour = +(match[10]);
+	    tz_minute = +(match[11] || 0);
+	    delta = (tz_hour * 60 + tz_minute) * 60000; // delta in mili-seconds
+	    if (match[9] === '-') delta = -delta;
+	  }
+
+	  date = new Date(Date.UTC(year, month, day, hour, minute, second, fraction));
+
+	  if (delta) date.setTime(date.getTime() - delta);
+
+	  return date;
+	}
+
+	function representYamlTimestamp(object /*, style*/) {
+	  return object.toISOString();
+	}
+
+	module.exports = new Type('tag:yaml.org,2002:timestamp', {
+	  kind: 'scalar',
+	  resolve: resolveYamlTimestamp,
+	  construct: constructYamlTimestamp,
+	  instanceOf: Date,
+	  represent: representYamlTimestamp
+	});
+
+	},{"../type":13}],"/":[function(require,module,exports){
+	'use strict';
+
+
+	var yaml = require('./lib/js-yaml.js');
+
+
+	module.exports = yaml;
+
+	},{"./lib/js-yaml.js":1}]},{},[])("/")
+	});
+	});
+
+	var jsyaml = interopDefault(jsYaml);
+
+	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
+	  return typeof obj;
+	} : function (obj) {
+	  return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj;
+	};
+
+	var classCallCheck = function (instance, Constructor) {
+	  if (!(instance instanceof Constructor)) {
+	    throw new TypeError("Cannot call a class as a function");
+	  }
+	};
+
+	var createClass = function () {
+	  function defineProperties(target, props) {
+	    for (var i = 0; i < props.length; i++) {
+	      var descriptor = props[i];
+	      descriptor.enumerable = descriptor.enumerable || false;
+	      descriptor.configurable = true;
+	      if ("value" in descriptor) descriptor.writable = true;
+	      Object.defineProperty(target, descriptor.key, descriptor);
+	    }
+	  }
+
+	  return function (Constructor, protoProps, staticProps) {
+	    if (protoProps) defineProperties(Constructor.prototype, protoProps);
+	    if (staticProps) defineProperties(Constructor, staticProps);
+	    return Constructor;
+	  };
+	}();
+
+	/**
+	 * @class Config class. @see getdefaults for the default config documentation.
+	 * Unlike a lot of other classes this is not a static class, you can create more than 1 config in your page.
+	 * Most likely you will not be creating the config Class yourself, but the InfoBox object will create one for you.
+	 * Config is 1 big object. When creating a config instance you may:
+	 * - not pass anything and load the default options
+	 * - pass an array in the first parameter that overrides the default object
+	 * - pass a filename of a yaml file that overrides the default + overrides from the array
+	 */
+
+	var Config = function () {
+	  function Config() {
+	    var config = arguments.length <= 0 || arguments[0] === undefined ? [] : arguments[0];
+	    var filename = arguments.length <= 1 || arguments[1] === undefined ? '' : arguments[1];
+	    classCallCheck(this, Config);
+
+	    console.log("loading config");
+
+	    this.config = this.getdefaults();
+	    this.config = $.extend(this.config, config);
+	    var me = this;
+	    this.loader = new Promise(function (resolve, fail) {
+	      if (filename.length > 0) {
+	        $.get(filename).then(function (data) {
+	          console.log('File load complete', data);
+	          console.log(jsyaml.load(data));
+	          var fileconfig = jsyaml.load(data);
+	          var jsonString = JSON.stringify(data);
+	          console.log(jsonString);
+	          console.log($.parseJSON(jsonString));
+	          me.config = $.extend(me.config, fileconfig);
+	          console.log(me.config);
+	          //          $(deferred.resolve);
+	          resolve();
+	        });
+	      } else {
+	        resolve();
+	      }
+	    });
+	  }
+
+	  createClass(Config, [{
+	    key: 'load',
+	    value: function load(handlebars) {
+	      this.handlebars = handlebars;
+	      this.loader.then(function () {
+	        console.log("Loading Config");
+	        return "Config";
+	      });
+	      return this.loader;
+	    }
+	  }, {
+	    key: 'getdefaults',
+	    value: function getdefaults() {
+	      return {
+	        defaultlabeltemplate: 'label',
+	        P: {
+	          P18: {
+	            width: 500,
+	            thumbwidth: 100
+	          }
+	        },
+	        Q: {},
+	        BaseType: {
+	          url: {}
+	        },
+	        Util: {
+	          Image: {
+	            width: 500,
+	            thumbwidth: 100
+	          },
+	          Map: {}
+	        }
+	      };
+	    }
+	  }, {
+	    key: 'getConfig',
+	    value: function getConfig() {
+	      //console.log("Yaml", jsyaml.safeDump(this.config));
+
+	      return this.config;
+	    }
+	  }]);
+	  return Config;
+	}();
+
+	var Config$1 = {
+	  Config: Config
+	};
 
 	var q = createCommonjsModule(function (module, exports) {
 	// vim:ts=4:sts=4:sw=4:
@@ -2462,31 +6448,12 @@
 
 	var index$1 = interopDefault(index);
 
-	var classCallCheck = function (instance, Constructor) {
-	  if (!(instance instanceof Constructor)) {
-	    throw new TypeError("Cannot call a class as a function");
-	  }
-	};
+	//import System from '../../bower_components/es6-module-loader/dist/es6-module-loader-dev.js'
+	// This blows our library up from 300k to 1.5M. So let's include traceur in html for now
+	// and see how we can precompile our modules later
+	//import traceur from '../../bower_components/traceur/traceur.js'
 
-	var createClass = function () {
-	  function defineProperties(target, props) {
-	    for (var i = 0; i < props.length; i++) {
-	      var descriptor = props[i];
-	      descriptor.enumerable = descriptor.enumerable || false;
-	      descriptor.configurable = true;
-	      if ("value" in descriptor) descriptor.writable = true;
-	      Object.defineProperty(target, descriptor.key, descriptor);
-	    }
-	  }
-
-	  return function (Constructor, protoProps, staticProps) {
-	    if (protoProps) defineProperties(Constructor.prototype, protoProps);
-	    if (staticProps) defineProperties(Constructor, staticProps);
-	    return Constructor;
-	  };
-	}();
-
-	var instance$1;
+	var instance$2;
 
 	var JavaScriptFetcherClass = function () {
 	  function JavaScriptFetcherClass() {
@@ -2506,12 +6473,16 @@
 	            console.log("Going to load Javascript for " + key);
 	            me.modules[key] = System.import('../src/templates/' + key + '.js' + '?bust=' + new Date().getTime()).then(function (the_module) {
 	              console.log("Loaded Javascript for  " + key, handlebars);
-	              var property = the_module.default[key]();
+	              var cleankey = key.replace('-', '');
+	              console.log("Loaded Javascript for clean key  " + cleankey);
+	              var property = the_module.default[cleankey]();
 	              property.load(handlebars).then(function () {
 	                console.log("Loaded Object " + key);
 	                me.modules[key] = property;
 	                // Return the Object for postpocessing
 	                resolve(property);
+	              }).catch(function (err) {
+	                console.error("Error loading load function for " + key, err);
 	              });
 	            }).catch(function (err) {
 	              // If not 404, log the error
@@ -2543,17 +6514,17 @@
 	}();
 
 	function JavaScriptFetcher() {
-	  if (typeof instance$1 === 'undefined') {
-	    instance$1 = new JavaScriptFetcherClass();
+	  if (typeof instance$2 === 'undefined') {
+	    instance$2 = new JavaScriptFetcherClass();
 	  }
-	  return instance$1;
+	  return instance$2;
 	}
 
 	var JavaScriptFetcher$1 = {
 	  JavaScriptFetcher: JavaScriptFetcher
 	};
 
-	var instance$2;
+	var instance$3;
 
 	var TemplateFetcherClass = function () {
 	  function TemplateFetcherClass() {
@@ -2568,7 +6539,7 @@
 	      var me = this;
 	      if (typeof handlebar.templates[name] === 'undefined') {
 	        var result = new Promise(function (resolve, reject) {
-	          $.ajax('templates/' + name + '.hbs').done(function (data) {
+	          $.ajax('./templates2/' + name + '.hbs').done(function (data) {
 	            handlebar.templates[name] = handlebar.compile(data);
 	            console.log("Compiled template " + name);
 	            resolve(handlebar.templates[name]);
@@ -2597,17 +6568,17 @@
 	}();
 
 	function TemplateFetcher(HandleBar) {
-	  if (typeof instance$2 === 'undefined') {
-	    instance$2 = new TemplateFetcherClass(HandleBar);
+	  if (typeof instance$3 === 'undefined') {
+	    instance$3 = new TemplateFetcherClass(HandleBar);
 	  }
-	  return instance$2;
+	  return instance$3;
 	}
 
 	var TemplateFetcher$1 = {
 	  TemplateFetcher: TemplateFetcher
 	};
 
-	function baseTypeTemplate(template, context, opts) {
+	function baseTypeTemplate(template, context, config) {
 
 	  if (template != 'time') {}
 	  //    return Promise.resolve("niks");
@@ -2659,11 +6630,30 @@
 	var myJavaScriptFetcher = JavaScriptFetcher$1.JavaScriptFetcher();
 	var myTemplateFetcher = TemplateFetcher$1.TemplateFetcher();
 
-	function dynamicPropertyTemplate(key, template, context, opts) {
-
-	  if (key == 'P18') {
-	    //  return Promise.resolve("later");
+	function dynamicPropertyTemplate(key, template, context, options, root) {
+	  var myoptions, localoptions;
+	  // options is an optional parameter and root is added by handlebars, always
+	  if (typeof root === 'undefined') {
+	    root = options;
+	    options = "{}";
 	  }
+	  if (key == 'P18') {
+	    //debugger;
+
+	  }
+	  try {
+	    localoptions = $.parseJSON(options);
+	    myoptions = $.extend(root.data.root.config.P[key], localoptions);
+	  } catch (e) {
+	    console.error("These options are not valis JSON", options);
+	    myoptions = typeof root.data.root.config.P[key] !== 'undefined' ? root.data.root.config.P[key] : {};
+	  }
+	  if (myoptions.variant) {
+	    template = template + "_" + variant;
+	  }
+	  context[0].options = myoptions;
+	  context['options'] = myoptions;
+	  console.log("context", context);
 
 	  var myHandlebars = HandleBarsWrapper$1.HandleBarsWrapper();
 	  var me = this;
@@ -2710,7 +6700,138 @@
 	  dynamicPropertyTemplate: dynamicPropertyTemplate
 	};
 
-	var instance;
+	var instance$4;
+	/**
+	 * @class static Labels class that manages different templates for rendering labels
+	 *
+	 */
+
+	var LabelsClass = function () {
+	  function LabelsClass(handlebars, config) {
+	    classCallCheck(this, LabelsClass);
+
+	    console.log("Loaded Labels Class");
+	    this.handlebars = handlebars;
+	    this.config = config;
+	    console.log("Registring Helper Labels_render");
+	    handlebars.registerHelper('Labels_render', this.renderhelper);
+	  }
+
+	  /** @function render Renders given label template or the default
+	   *
+	   **/
+
+
+	  createClass(LabelsClass, [{
+	    key: "renderhelper",
+	    value: function renderhelper() {
+	      var property = arguments.length <= 0 || arguments[0] === undefined ? '' : arguments[0];
+	      var language = arguments.length <= 1 || arguments[1] === undefined ? 'en' : arguments[1];
+	      var template = arguments.length <= 2 || arguments[2] === undefined ? '' : arguments[2];
+
+	      // handlebars always adds the context as the last argument
+	      // I want to be able to only pass in the property and nothing More
+	      // so we need to reset language && template
+	      language = (typeof language === "undefined" ? "undefined" : _typeof(language)) == 'object' ? language = 'en' : language;
+	      template = (typeof template === "undefined" ? "undefined" : _typeof(template)) == 'object' ? template = '' : template;
+	      var context = arguments[arguments.length - 1];
+	      var labels = Labels();
+	      return labels.render(labels, property, language, template, context);
+	    }
+	    /** @function render renders given label template or the default
+	     * @param labels the Labels Object
+	     * @param property The property for which to render the label. Used to lookup if the default label template might be overridded in the Config.
+	     * @param template If this value is set, this will be used as the template for rendering the label
+	     * @returns promise that returns the label text (or html)
+	     **/
+
+	  }, {
+	    key: "render",
+	    value: function render(labels, property, language, template, context) {
+	      console.log('Labels', labels);
+	      console.log('property', property);
+	      console.log('Template', template);
+
+	      var config = labels.config.getConfig();
+	      if (template.length == 0) {
+	        template = typeof config.defaultlabeltemplate !== 'undefined' ? config.defaultlabeltemplate : template;
+	        if (property.length > 0 && typeof config[property] !== 'undefined') {
+	          template = typeof config[property].labeltemplate !== 'undefined' ? config[property].labeltemplate : template;
+	        }
+	      }
+	      console.log('Template', template);
+	      var labelarray = {
+	        property: property,
+	        language: language,
+	        text: context.data._parent.root.labels.entities[property].labels[language].value,
+	        description: context.data._parent.root.labels.entities[property].descriptions[language].value,
+	        label: context.data._parent.root.labels.entities[property]
+	      };
+
+	      // I copied most of this code from baseTypeTemplate.js so I probably need a function somewhere
+	      var myHandlebars = this.handlebars;
+
+	      //import static stuff into the helpers
+	      return new Promise(function (resolve, fail) {
+	        console.log("going to promise... " + template);
+	        Promise.resolve(myHandlebars.getTemplate(template, false)).then(function (hbtemplate) {
+	          console.log("Going to render " + template, hbtemplate);
+	          Promise.resolve(hbtemplate(labelarray)).then(function (result) {
+	            console.log("Rendered " + template);
+	            resolve(new Handlebars.SafeString(result));
+	          }).catch(function (err) {
+	            console.error("There was an error processing template " + template, err);
+	            resolve("There was an error processing this template");
+	          });
+	        }).catch(function (fail) {
+	          console.error("did not find template " + template, fail);
+	          if (typeof template === 'undefined') {
+	            template = "label";
+	          }
+	          myHandlebars.getTemplate(template).then(function (hbtemplate2) {
+	            console.error("If you see this one of the sub-modules or code is probably misbehaving:" + template, hbtemplate2);
+	            // resolve(me.PromisedHandlebars.SafeString(hbtemplate2(context)));
+	            try {
+	              hbtemplate2(context).then(function (result) {
+	                resolve(new Handlebars.SafeString(result));
+	              });
+	            } catch (e) {
+	              resolve("There was an error processing this template");
+	            }
+	            console.log("Resolving Label to empty string");
+	            resolve(new Handlebars.SafeString(""));
+	          });
+	        });
+	      });
+	    }
+	  }]);
+	  return LabelsClass;
+	}();
+
+	/**
+	 * @function Map
+	 * Factory function
+	 */
+
+
+	function Labels(handlebars, config) {
+	  if (typeof instance$4 === 'undefined') {
+	    instance$4 = new LabelsClass(handlebars, config);
+	  }
+	  return instance$4;
+	}
+
+	var Labels$1 = {
+	  Labels: Labels
+	};
+
+	//import he from '../../bower_components/he/he.js';
+	//import {
+	//  encode, decode
+	//}
+	//from '../../node_modules/uuencode/indexes6.js';
+
+	var instance$1;
 
 	/** @class Static Class used to load additional HandleBars templates and Javascript and
 	 * allows Handlebar templates to be used as Promises.
@@ -2718,11 +6839,14 @@
 	 */
 
 	var HandleBarsWrapperClass = function () {
-	  function HandleBarsWrapperClass() {
+	  function HandleBarsWrapperClass(config) {
 	    classCallCheck(this, HandleBarsWrapperClass);
 
 	    this.postProcessFunctions = [];
 	    this.modules = [];
+	    //  this.he = he;
+	    this.config = config;
+
 	    this.PromisedHandlebars = index$1(Handlebars);
 	    if (typeof this.PromisedHandlebars.partials === 'undefined') {
 	      this.PromisedHandlebars.partials = [];
@@ -2733,6 +6857,7 @@
 
 	    this.TemplateFetcher = TemplateFetcher$1.TemplateFetcher(this.PromisedHandlebars);
 	    this.JavaScriptFetcher = JavaScriptFetcher$1.JavaScriptFetcher();
+	    this.Labels = Labels$1.Labels(this, config);
 	    // The fallback template;
 	    this.getTemplate('defaultText');
 	    //      var promisedHandlebars = require('promised-handlebars')
@@ -2741,10 +6866,17 @@
 	    var me = this;
 
 	    this.PromisedHandlebars.registerHelper('debug', this.debug);
+	    this.PromisedHandlebars.registerHelper('safestring', this.safestring);
+	    this.PromisedHandlebars.registerHelper('encodeURIComponent', this.encodeURIComponent);
+	    this.PromisedHandlebars.registerHelper('stripHTML', this.stripHTML);
+	    //    this.PromisedHandlebars.registerHelper('encode', this.encode);
+	    //    this.PromisedHandlebars.registerHelper('escape', this.escape);
+	    //    this.PromisedHandlebars.registerHelper('decode', this.decode);
+
 	    this.PromisedHandlebars.registerHelper('dynamicPropertyTemplate', dynamicPropertyTemplate$1.dynamicPropertyTemplate);
 	    this.PromisedHandlebars.registerHelper('baseTypeTemplate', baseTypeTemplate$1.baseTypeTemplate);
-
-	    this.PromisedHandlebars.registerHelper('wikibasetemplate', this.wikibasetemplate);
+	    //this.PromisedHandlebars.registerHelper('wikibasetemplate', this.wikibasetemplate);
+	    this.PromisedHandlebars.registerHelper('labeltemplate', this.labeltemplate);
 
 	    // This is so we can compile all partials + templates into 1 file
 	    if (typeof me.PromisedHandlebars.templates !== "undefined") {
@@ -2770,20 +6902,134 @@
 	      //      'The metadata object at the top of the file (if it exists): ', context.meta
 	      );
 	    }
-	  }, {
-	    key: 'wikibasetemplate',
-	    value: function wikibasetemplate(key, template, context, opts) {
-	      //  console.log("looking for " + key);
 
-	      function isNumber(n) {
-	        return !isNaN(parseFloat(n)) && isFinite(n);
-	      }
-	      if (isNumber(key)) {
-	        key = "Q" + key;
-	        //me.modules[key] = false; // Dont use a template per statement we probably want to find the datatype here
-	        //  key = "wikibase-item";
+	    /**
+	     * @function safestring HandleBars helper that marks a value as a safestring
+	     * @param text Text
+	     * @returns safe text
+	     * @see http://handlebarsjs.com/#html-escaping
+	     */
+
+	  }, {
+	    key: 'safestring',
+	    value: function safestring(text) {
+	      try {
+	        return new Handlebars.SafeString(text);
+	      } catch (e) {
+	        console.error("Error while safestringing " + text, e);
+	        return text;
 	      }
 	    }
+
+	    /**
+	     * @function encodeURIComponent helper to encode part of a URI, for example ImageAPI filenames as parameters
+	     * @param text Text that should be part of a URL
+	     * @returns encoded text
+	     * @see https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent
+	     */
+
+	  }, {
+	    key: 'encodeURIComponent',
+	    value: function (_encodeURIComponent) {
+	      function encodeURIComponent(_x) {
+	        return _encodeURIComponent.apply(this, arguments);
+	      }
+
+	      encodeURIComponent.toString = function () {
+	        return _encodeURIComponent.toString();
+	      };
+
+	      return encodeURIComponent;
+	    }(function (text) {
+	      try {
+	        //      var uencode = require('../../node_modules/uuencode/uuencode.js');
+	        return encodeURIComponent(text);
+	      } catch (e) {
+	        console.error("Error while uuencoding " + text, e);
+	        return text;
+	      }
+	    })
+
+	    /**
+	     * @function escape HandleBars helper that escapes text that needs escaping like HTML
+	     * @param text Text
+	     * @returns escaped text
+	     * @see http://handlebarsjs.com/#html-escaping
+	     */
+
+	  }, {
+	    key: 'escape',
+	    value: function escape(text) {
+	      return Handlebars.Utils.escapeExpression(text);
+	    }
+
+	    /**
+	     * @function encode helper that encodes html (such as html returned by imageAPI)
+	     * @param text Text
+	     * @returns encoded text
+	     * @see https://github.com/mathiasbynens/he
+	     */
+
+	  }, {
+	    key: 'encode',
+	    value: function encode(text) {
+	      try {
+	        return he.encode(text);
+	      } catch (e) {
+	        console.error("Error while encoding " + text, e);
+	        return text;
+	      }
+	    }
+
+	    /**
+	     * @function decode helper that decodes encoded html (such as html returned by imageAPI)
+	     * @param text Text
+	     * @returns decoded text
+	     * @see https://github.com/mathiasbynens/he
+	     */
+	    /*  decode(text) {
+	        try {
+	          console.log('decode', he.decode(text));
+	           return he.decode(text);
+	        } catch (e) {
+	          console.error("Error while decoding " + text, e);
+	          return text;
+	        }
+	      }
+	    */
+	    /**
+	     * @function striHTML helper that removes html tags from text. ImageAPI for example returns HTML where you would expect plain text
+	     * @param html HTML Text
+	     * @returns plain text
+	     */
+
+	  }, {
+	    key: 'stripHTML',
+	    value: function stripHTML(html) {
+	      try {
+	        console.log('stripHTML', $("<p>").html(html).text());
+
+	        return $("<p>").html(html).text();
+	      } catch (e) {
+	        console.error("Error while decoding " + html, e);
+	        return html;
+	      }
+	    }
+
+	    /*
+	      wikibasetemplate(key, template, context, opts) {
+	        //  console.log("looking for " + key);
+	         function isNumber(n) {
+	          return !isNaN(parseFloat(n)) && isFinite(n);
+	        }
+	        if (isNumber(key)) {
+	          key = "Q" + key;
+	          //me.modules[key] = false; // Dont use a template per statement we probably want to find the datatype here
+	          //  key = "wikibase-item";
+	        }
+	      }
+	    */
+
 	  }, {
 	    key: 'registerHelper',
 	    value: function registerHelper(name, helperfunction) {
@@ -2801,7 +7047,7 @@
 	      var element = $(element);
 	      this.postProcessFunctions.forEach(function (functionname) {
 	        try {
-	          functionname();
+	          functionname(element);
 	        } catch (e) {
 	          console.error("Error in Postprocessing function ", functionname.toString());
 	        }
@@ -2855,171 +7101,86 @@
 	  return HandleBarsWrapperClass;
 	}();
 
-	function HandleBarsWrapper() {
-	  if (typeof instance === 'undefined') {
-	    instance = new HandleBarsWrapperClass();
+	function HandleBarsWrapper(config) {
+	  if (typeof instance$1 === 'undefined') {
+	    instance$1 = new HandleBarsWrapperClass(config);
 	  }
-	  return instance;
+	  return instance$1;
 	}
 
 	var HandleBarsWrapper$1 = {
 	  HandleBarsWrapper: HandleBarsWrapper
 	};
 
-	//import P373 from './templates/helpers/P373.js';
-	/** InfoBox Class */
+	/** Tooltips Class */
 
-	var InfoBox = function () {
-	  function InfoBox() {
-	    classCallCheck(this, InfoBox);
-
-	    var me = this;
-	    this.handlebars = HandleBarsWrapper$1.HandleBarsWrapper();;
-	  }
-
-	  createClass(InfoBox, [{
-	    key: "Populate",
-	    value: function Populate(Id, Q, languages) {
-	      var simplifiedClaims, labels, entity;
-
-	      //  var url = wdk.getEntities(ids, languages, properties, format)
-	      var url = wdk.getEntities(Q, languages);
-	      var me = this;
-	      var result = new Promise(function (resolve, fail) {
-	        $.ajax({
-	          dataType: "jsonp",
-	          url: url
-	        }).done(function (data) {
-	          var entity = data.entities[Q];
-	          var entities = wdk.parse.wd.entities;
-	          //  var entities = wdk.parse.wd.entities(data);
-	          var simplifiedClaims = wdk.simplifyClaims(entity.claims);
-	          //  alert(entities);
-
-	          //  We also want the attributes / wikidata items Q codes here!
-	          //    The Q values are in the simplifiedClaims as values
-	          var properties = Object.keys(simplifiedClaims);
-	          var url2 = wdk.getEntities(properties, languages);
-
-	          $.ajax({
-	            dataType: "jsonp",
-	            url: url2
-	          }).done(function (labels) {
-
-	            //            _.each(labels.entities, function(label, key, labels) {
-	            //              entity.claims[key].label = label;
-	            //            });
-
-	            //        $('#infobox').append("<h2>" + entity.labels[Object.keys(entity.labels)[0]].value + "</h2>")
-	            //        $('#infobox').append("<i>" + entity.descriptions[Object.keys(entity.descriptions)[0]].value +
-	            //          "</i>")
-	            document.title = entity.labels[Object.keys(entity.labels)[0]].value;
-	            var object = {
-	              entity: entity,
-	              labels: labels,
-	              languages: languages
-	            };
-	            me.handlebars.getTemplate('infobox').then(function (infobox) {
-	              console.log("fetched infoboxhbs", infobox);
-	              infobox(object).then(function (html) {
-	                console.log("fetched html");
-	                $('#' + Id).append(html);
-	                me.handlebars.postProcess('#' + Id);
-	                resolve();
-	              });
-	            });
-	          });
-	        }).catch(function (err) {
-	          fail(err);
-	        });
-	      });
-	      return result;
-	    }
-	  }]);
-	  return InfoBox;
-	}();
-
-	/** InfoBox Class */
-
-	var InfoBoxSPARQL = function () {
-	  function InfoBoxSPARQL() {
-	    classCallCheck(this, InfoBoxSPARQL);
+	var Tooltips = function () {
+	  function Tooltips() {
+	    classCallCheck(this, Tooltips);
 
 	    var me = this;
-	    this.handlebars = HandleBarsWrapper$1.HandleBarsWrapper();;
-	  }
+	    var config = {
+	      defaultlabeltemplate: 'linkedlabel'
+	    };
+	    this.config = new Config$1.Config(config, 'config.yaml');
+	    console.log("Log", this.config.getConfig());
 
-	  createClass(InfoBoxSPARQL, [{
-	    key: "getentities",
-	    value: function getentities(Q, languages) {
-	      var simplifiedClaims, labels, entity;
+	    $.getScript("../bower_components/jquery-ui/jquery-ui.min.js");
 
-	      //  var url = wdk.getEntities(ids, languages, properties, format)
-	      var url = wdk.getEntities(Q, languages);
-	      // This is an official example from the examples on query.wikidata.org
-	      // The problem with this one and the next is that only attributes that refer to another
-	      // wikidata item are included, but no hard values like date of birth and official website
-	      //
-	      url = wdk.sparqlQuery("#Data of Douglas Adams\nPREFIX entity: <http://www.wikidata.org/entity/>\n#partial results\n\nSELECT ?propUrl ?propLabel ?valUrl ?valLabel ?picture\nWHERE\n{\n\thint:Query hint:optimizer 'None' .\n\t{\tBIND(entity:Q42 AS ?valUrl) .\n\t\tBIND(\"N/A\" AS ?propUrl ) .\n\t\tBIND(\"identity\"@en AS ?propLabel ) .\n\t}\n\tUNION\n\t{\tentity:Q42 ?propUrl ?valUrl .\n\t\t?property ?ref ?propUrl .\n\t\t?property a wikibase:Property .\n\t\t?property rdfs:label ?propLabel\n\t}\n\n  \t?valUrl rdfs:label ?valLabel\n\tFILTER (LANG(?valLabel) = 'en') .\n\tOPTIONAL{ ?valUrl wdt:P18 ?picture .}\n\tFILTER (lang(?propLabel) = 'en' )\n}\nORDER BY ?propUrl ?valUrl\nLIMIT 200");
+	    this.loader = new Promise(function (resolve, fail) {
+	      $.when($.Deferred(function (deferred) {
+	        console.log("jquery-ui");
+	        // Start the Tooltips
+	        $(function () {
+	          $("body").tooltip({
+	            items: ".wikidata-tooltip[data-wikidata]",
+	            content: function content() {
+	              var element = $(this);
+	              if (element.is("[data-wikidata]")) {
+	                var Q = element.data('wikidata');
 
-	      url = wdk.sparqlQuery("PREFIX entity: <http://www.wikidata.org/entity/>\n      SELECT ?predicate ?predicateLabel ?object ?objectLabel ?relationship\n      WHERE {\n        entity:" + Q + " ?predicate ?object.\n        ?property wikibase:directClaim ?predicate.\n        ?property rdfs:label ?relationship.\n        SERVICE wikibase:label {\n          bd:serviceParam wikibase:language \"nl,en\".\n        }\n        ?object rdfs:label ?objectLabel.\n        FILTER((LANG( ?objectLabel)) = \"en\")\n        FILTER((LANG( ?relationship)) = \"en\")\n      }\n    LIMIT 100");
+	                var template = element.data('wikidatatemplate');
+	                if (!template) {
+	                  template = "simple";
+	                }
 
-	      var me = this;
-	      $.ajax({
-	        //  dataType: "jsonp",
-	        url: url
-	      }).done(function (data) {
-	        var results = data.results.bindings;
-	        var entity = data.entities[Q];
-	        var entities = wdk.parse.wd.entities;
-	        //  var entities = wdk.parse.wd.entities(data);
-	        var simplifiedClaims = wdk.simplifyClaims(entity.claims);
-	        //  alert(entities);
-
-	        //    We also want the attributes / wikidata items Q codes here!
-	        //        The Q values are in the simplifiedClaims as values
-	        var properties = Object.keys(simplifiedClaims);
-	        var url2 = wdk.getEntities(properties, languages);
-	        //alert("done");
-	        //request(url2 ....
-	        $.ajax({
-	          dataType: "jsonp",
-	          url: url2
-	        }).done(function (labels) {
-
-	          //            _.each(labels.entities, function(label, key, labels) {
-	          //              entity.claims[key].label = label;
-	          //            });
-
-	          $('#infobox').append("<h2>" + entity.labels[Object.keys(entity.labels)[0]].value + "</h2>");
-	          $('#infobox').append("<i>" + entity.descriptions[Object.keys(entity.descriptions)[0]].value + "</i>");
-
-	          var object = {
-	            entity: entity,
-	            labels: labels,
-	            languages: languages
-	          };
-	          me.handlebars.getTemplate('infobox').then(function (infobox) {
-	            console.log("fetched infoboxhbs", infobox);
-	            infobox(object).then(function (html) {
-	              console.log("fetched html");
-	              $('#infobox').html(html);
-	              me.handlebars.postProcess('#infobox');
-	            });
+	                var result = $('<div style="width:100px; height:50px;" class="wikidata" data-wikidata="' + Q + '" data-wikidatatemplate="' + template + '">');
+	                var id = result.uniqueId();
+	                var html = id[0].outerHTML;
+	                return html;
+	              }
+	            }
 	          });
 	        });
-	      }).fail(function (err) {
-	        alert("error");
+	        $(deferred.resolve);
+	      })).done(function () {
+	        console.log("Resolved jquery-ui");
+	        resolve();
 	      });
+	    });
+	  }
+
+	  createClass(Tooltips, [{
+	    key: 'load',
+	    value: function load(handlebars) {
+	      this.handlebars = handlebars;
+	      this.loader.then(function () {
+	        console.log("Loaded Tooltips");
+	        return "";
+	      });
+	      return this.loader;
 	    }
 	  }]);
-	  return InfoBoxSPARQL;
+	  return Tooltips;
 	}();
 
-	var isObject = createCommonjsModule(function (module) {
+	var Tooltips$1 = {
+	  Tooltips: Tooltips
+	};
+
 	/**
 	 * Checks if `value` is the
-	 * [language type](http://www.ecma-international.org/ecma-262/6.0/#sec-ecmascript-language-types)
+	 * [language type](http://www.ecma-international.org/ecma-262/7.0/#sec-ecmascript-language-types)
 	 * of `Object`. (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
 	 *
 	 * @static
@@ -3047,32 +7208,17 @@
 	  return !!value && (type == 'object' || type == 'function');
 	}
 
-	module.exports = isObject;
-	});
-
-	var isObject$1 = interopDefault(isObject);
-
-
-	var require$$1$3 = Object.freeze({
-	  default: isObject$1
-	});
-
-	var isFunction = createCommonjsModule(function (module) {
-	var isObject = interopDefault(require$$1$3);
-
-	/** `Object#toString` result references. */
-	var funcTag = '[object Function]',
-	    genTag = '[object GeneratorFunction]';
-
+	var funcTag = '[object Function]';
+	var genTag = '[object GeneratorFunction]';
 	/** Used for built-in method references. */
-	var objectProto = Object.prototype;
+	var objectProto$1 = Object.prototype;
 
 	/**
 	 * Used to resolve the
-	 * [`toStringTag`](http://ecma-international.org/ecma-262/6.0/#sec-object.prototype.tostring)
+	 * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
 	 * of values.
 	 */
-	var objectToString = objectProto.toString;
+	var objectToString = objectProto$1.toString;
 
 	/**
 	 * Checks if `value` is classified as a `Function` object.
@@ -3082,8 +7228,7 @@
 	 * @since 0.1.0
 	 * @category Lang
 	 * @param {*} value The value to check.
-	 * @returns {boolean} Returns `true` if `value` is correctly classified,
-	 *  else `false`.
+	 * @returns {boolean} Returns `true` if `value` is a function, else `false`.
 	 * @example
 	 *
 	 * _.isFunction(_);
@@ -3094,23 +7239,11 @@
 	 */
 	function isFunction(value) {
 	  // The use of `Object#toString` avoids issues with the `typeof` operator
-	  // in Safari 8 which returns 'object' for typed array and weak map constructors,
-	  // and PhantomJS 1.9 which returns 'function' for `NodeList` instances.
+	  // in Safari 8-9 which returns 'object' for typed array and other constructors.
 	  var tag = isObject(value) ? objectToString.call(value) : '';
 	  return tag == funcTag || tag == genTag;
 	}
 
-	module.exports = isFunction;
-	});
-
-	var isFunction$1 = interopDefault(isFunction);
-
-
-	var require$$2$2 = Object.freeze({
-	  default: isFunction$1
-	});
-
-	var _isHostObject = createCommonjsModule(function (module) {
 	/**
 	 * Checks if `value` is a host object in IE < 9.
 	 *
@@ -3130,81 +7263,17 @@
 	  return result;
 	}
 
-	module.exports = isHostObject;
-	});
-
-	var _isHostObject$1 = interopDefault(_isHostObject);
-
-
-	var require$$3$1 = Object.freeze({
-	  default: _isHostObject$1
-	});
-
-	var _checkGlobal = createCommonjsModule(function (module) {
-	/**
-	 * Checks if `value` is a global object.
-	 *
-	 * @private
-	 * @param {*} value The value to check.
-	 * @returns {null|Object} Returns `value` if it's a global object, else `null`.
-	 */
-	function checkGlobal(value) {
-	  return (value && value.Object === Object) ? value : null;
-	}
-
-	module.exports = checkGlobal;
-	});
-
-	var _checkGlobal$1 = interopDefault(_checkGlobal);
-
-
-	var require$$0$4 = Object.freeze({
-	  default: _checkGlobal$1
-	});
-
-	var _root = createCommonjsModule(function (module) {
-	var checkGlobal = interopDefault(require$$0$4);
-
 	/** Detect free variable `global` from Node.js. */
-	var freeGlobal = checkGlobal(typeof commonjsGlobal == 'object' && commonjsGlobal);
+	var freeGlobal = typeof global == 'object' && global && global.Object === Object && global;
 
 	/** Detect free variable `self`. */
-	var freeSelf = checkGlobal(typeof self == 'object' && self);
-
-	/** Detect `this` as the global object. */
-	var thisGlobal = checkGlobal(typeof commonjsGlobal == 'object' && commonjsGlobal);
+	var freeSelf = typeof self == 'object' && self && self.Object === Object && self;
 
 	/** Used as a reference to the global object. */
-	var root = freeGlobal || freeSelf || thisGlobal || Function('return this')();
-
-	module.exports = root;
-	});
-
-	var _root$1 = interopDefault(_root);
-
-
-	var require$$0$3 = Object.freeze({
-		default: _root$1
-	});
-
-	var _coreJsData = createCommonjsModule(function (module) {
-	var root = interopDefault(require$$0$3);
+	var root = freeGlobal || freeSelf || Function('return this')();
 
 	/** Used to detect overreaching core-js shims. */
 	var coreJsData = root['__core-js_shared__'];
-
-	module.exports = coreJsData;
-	});
-
-	var _coreJsData$1 = interopDefault(_coreJsData);
-
-
-	var require$$0$2 = Object.freeze({
-		default: _coreJsData$1
-	});
-
-	var _isMasked = createCommonjsModule(function (module) {
-	var coreJsData = interopDefault(require$$0$2);
 
 	/** Used to detect methods masquerading as native. */
 	var maskSrcKey = (function() {
@@ -3223,19 +7292,11 @@
 	  return !!maskSrcKey && (maskSrcKey in func);
 	}
 
-	module.exports = isMasked;
-	});
+	/** Used for built-in method references. */
+	var funcProto$1 = Function.prototype;
 
-	var _isMasked$1 = interopDefault(_isMasked);
-
-
-	var require$$2$3 = Object.freeze({
-	  default: _isMasked$1
-	});
-
-	var _toSource = createCommonjsModule(function (module) {
 	/** Used to resolve the decompiled source of functions. */
-	var funcToString = Function.prototype.toString;
+	var funcToString$1 = funcProto$1.toString;
 
 	/**
 	 * Converts `func` to its source code.
@@ -3247,7 +7308,7 @@
 	function toSource(func) {
 	  if (func != null) {
 	    try {
-	      return funcToString.call(func);
+	      return funcToString$1.call(func);
 	    } catch (e) {}
 	    try {
 	      return (func + '');
@@ -3256,26 +7317,9 @@
 	  return '';
 	}
 
-	module.exports = toSource;
-	});
-
-	var _toSource$1 = interopDefault(_toSource);
-
-
-	var require$$0$5 = Object.freeze({
-	  default: _toSource$1
-	});
-
-	var _baseIsNative = createCommonjsModule(function (module) {
-	var isFunction = interopDefault(require$$2$2),
-	    isHostObject = interopDefault(require$$3$1),
-	    isMasked = interopDefault(require$$2$3),
-	    isObject = interopDefault(require$$1$3),
-	    toSource = interopDefault(require$$0$5);
-
 	/**
 	 * Used to match `RegExp`
-	 * [syntax characters](http://ecma-international.org/ecma-262/6.0/#sec-patterns).
+	 * [syntax characters](http://ecma-international.org/ecma-262/7.0/#sec-patterns).
 	 */
 	var reRegExpChar = /[\\^$.*+?()[\]{}|]/g;
 
@@ -3283,10 +7327,10 @@
 	var reIsHostCtor = /^\[object .+?Constructor\]$/;
 
 	/** Used for built-in method references. */
+	var funcProto = Function.prototype;
 	var objectProto = Object.prototype;
-
 	/** Used to resolve the decompiled source of functions. */
-	var funcToString = Function.prototype.toString;
+	var funcToString = funcProto.toString;
 
 	/** Used to check objects for own properties. */
 	var hasOwnProperty = objectProto.hasOwnProperty;
@@ -3313,17 +7357,6 @@
 	  return pattern.test(toSource(value));
 	}
 
-	module.exports = baseIsNative;
-	});
-
-	var _baseIsNative$1 = interopDefault(_baseIsNative);
-
-
-	var require$$1$2 = Object.freeze({
-	  default: _baseIsNative$1
-	});
-
-	var _getValue = createCommonjsModule(function (module) {
 	/**
 	 * Gets the value at `key` of `object`.
 	 *
@@ -3335,20 +7368,6 @@
 	function getValue(object, key) {
 	  return object == null ? undefined : object[key];
 	}
-
-	module.exports = getValue;
-	});
-
-	var _getValue$1 = interopDefault(_getValue);
-
-
-	var require$$0$6 = Object.freeze({
-	  default: _getValue$1
-	});
-
-	var _getNative = createCommonjsModule(function (module) {
-	var baseIsNative = interopDefault(require$$1$2),
-	    getValue = interopDefault(require$$0$6);
 
 	/**
 	 * Gets the native function at `key` of `object`.
@@ -3363,34 +7382,8 @@
 	  return baseIsNative(value) ? value : undefined;
 	}
 
-	module.exports = getNative;
-	});
-
-	var _getNative$1 = interopDefault(_getNative);
-
-
-	var require$$1$1 = Object.freeze({
-	  default: _getNative$1
-	});
-
-	var _nativeCreate = createCommonjsModule(function (module) {
-	var getNative = interopDefault(require$$1$1);
-
 	/* Built-in method references that are verified to be native. */
 	var nativeCreate = getNative(Object, 'create');
-
-	module.exports = nativeCreate;
-	});
-
-	var _nativeCreate$1 = interopDefault(_nativeCreate);
-
-
-	var require$$0$1 = Object.freeze({
-		default: _nativeCreate$1
-	});
-
-	var _hashClear = createCommonjsModule(function (module) {
-	var nativeCreate = interopDefault(require$$0$1);
 
 	/**
 	 * Removes all key-value entries from the hash.
@@ -3403,17 +7396,6 @@
 	  this.__data__ = nativeCreate ? nativeCreate(null) : {};
 	}
 
-	module.exports = hashClear;
-	});
-
-	var _hashClear$1 = interopDefault(_hashClear);
-
-
-	var require$$4$1 = Object.freeze({
-	  default: _hashClear$1
-	});
-
-	var _hashDelete = createCommonjsModule(function (module) {
 	/**
 	 * Removes `key` and its value from the hash.
 	 *
@@ -3428,27 +7410,14 @@
 	  return this.has(key) && delete this.__data__[key];
 	}
 
-	module.exports = hashDelete;
-	});
-
-	var _hashDelete$1 = interopDefault(_hashDelete);
-
-
-	var require$$3$2 = Object.freeze({
-	  default: _hashDelete$1
-	});
-
-	var _hashGet = createCommonjsModule(function (module) {
-	var nativeCreate = interopDefault(require$$0$1);
-
 	/** Used to stand-in for `undefined` hash values. */
 	var HASH_UNDEFINED = '__lodash_hash_undefined__';
 
 	/** Used for built-in method references. */
-	var objectProto = Object.prototype;
+	var objectProto$2 = Object.prototype;
 
 	/** Used to check objects for own properties. */
-	var hasOwnProperty = objectProto.hasOwnProperty;
+	var hasOwnProperty$1 = objectProto$2.hasOwnProperty;
 
 	/**
 	 * Gets the hash value for `key`.
@@ -3465,27 +7434,14 @@
 	    var result = data[key];
 	    return result === HASH_UNDEFINED ? undefined : result;
 	  }
-	  return hasOwnProperty.call(data, key) ? data[key] : undefined;
+	  return hasOwnProperty$1.call(data, key) ? data[key] : undefined;
 	}
 
-	module.exports = hashGet;
-	});
-
-	var _hashGet$1 = interopDefault(_hashGet);
-
-
-	var require$$2$4 = Object.freeze({
-	  default: _hashGet$1
-	});
-
-	var _hashHas = createCommonjsModule(function (module) {
-	var nativeCreate = interopDefault(require$$0$1);
-
 	/** Used for built-in method references. */
-	var objectProto = Object.prototype;
+	var objectProto$3 = Object.prototype;
 
 	/** Used to check objects for own properties. */
-	var hasOwnProperty = objectProto.hasOwnProperty;
+	var hasOwnProperty$2 = objectProto$3.hasOwnProperty;
 
 	/**
 	 * Checks if a hash value for `key` exists.
@@ -3498,24 +7454,11 @@
 	 */
 	function hashHas(key) {
 	  var data = this.__data__;
-	  return nativeCreate ? data[key] !== undefined : hasOwnProperty.call(data, key);
+	  return nativeCreate ? data[key] !== undefined : hasOwnProperty$2.call(data, key);
 	}
 
-	module.exports = hashHas;
-	});
-
-	var _hashHas$1 = interopDefault(_hashHas);
-
-
-	var require$$1$4 = Object.freeze({
-	  default: _hashHas$1
-	});
-
-	var _hashSet = createCommonjsModule(function (module) {
-	var nativeCreate = interopDefault(require$$0$1);
-
 	/** Used to stand-in for `undefined` hash values. */
-	var HASH_UNDEFINED = '__lodash_hash_undefined__';
+	var HASH_UNDEFINED$1 = '__lodash_hash_undefined__';
 
 	/**
 	 * Sets the hash `key` to `value`.
@@ -3529,26 +7472,9 @@
 	 */
 	function hashSet(key, value) {
 	  var data = this.__data__;
-	  data[key] = (nativeCreate && value === undefined) ? HASH_UNDEFINED : value;
+	  data[key] = (nativeCreate && value === undefined) ? HASH_UNDEFINED$1 : value;
 	  return this;
 	}
-
-	module.exports = hashSet;
-	});
-
-	var _hashSet$1 = interopDefault(_hashSet);
-
-
-	var require$$0$7 = Object.freeze({
-	  default: _hashSet$1
-	});
-
-	var _Hash = createCommonjsModule(function (module) {
-	var hashClear = interopDefault(require$$4$1),
-	    hashDelete = interopDefault(require$$3$2),
-	    hashGet = interopDefault(require$$2$4),
-	    hashHas = interopDefault(require$$1$4),
-	    hashSet = interopDefault(require$$0$7);
 
 	/**
 	 * Creates a hash object.
@@ -3575,17 +7501,6 @@
 	Hash.prototype.has = hashHas;
 	Hash.prototype.set = hashSet;
 
-	module.exports = Hash;
-	});
-
-	var _Hash$1 = interopDefault(_Hash);
-
-
-	var require$$2$1 = Object.freeze({
-	  default: _Hash$1
-	});
-
-	var _listCacheClear = createCommonjsModule(function (module) {
 	/**
 	 * Removes all key-value entries from the list cache.
 	 *
@@ -3597,20 +7512,9 @@
 	  this.__data__ = [];
 	}
 
-	module.exports = listCacheClear;
-	});
-
-	var _listCacheClear$1 = interopDefault(_listCacheClear);
-
-
-	var require$$4$2 = Object.freeze({
-	  default: _listCacheClear$1
-	});
-
-	var eq = createCommonjsModule(function (module) {
 	/**
 	 * Performs a
-	 * [`SameValueZero`](http://ecma-international.org/ecma-262/6.0/#sec-samevaluezero)
+	 * [`SameValueZero`](http://ecma-international.org/ecma-262/7.0/#sec-samevaluezero)
 	 * comparison between two values to determine if they are equivalent.
 	 *
 	 * @static
@@ -3622,8 +7526,8 @@
 	 * @returns {boolean} Returns `true` if the values are equivalent, else `false`.
 	 * @example
 	 *
-	 * var object = { 'user': 'fred' };
-	 * var other = { 'user': 'fred' };
+	 * var object = { 'a': 1 };
+	 * var other = { 'a': 1 };
 	 *
 	 * _.eq(object, object);
 	 * // => true
@@ -3644,24 +7548,11 @@
 	  return value === other || (value !== value && other !== other);
 	}
 
-	module.exports = eq;
-	});
-
-	var eq$1 = interopDefault(eq);
-
-
-	var require$$0$9 = Object.freeze({
-	  default: eq$1
-	});
-
-	var _assocIndexOf = createCommonjsModule(function (module) {
-	var eq = interopDefault(require$$0$9);
-
 	/**
 	 * Gets the index at which the `key` is found in `array` of key-value pairs.
 	 *
 	 * @private
-	 * @param {Array} array The array to search.
+	 * @param {Array} array The array to inspect.
 	 * @param {*} key The key to search for.
 	 * @returns {number} Returns the index of the matched value, else `-1`.
 	 */
@@ -3674,19 +7565,6 @@
 	  }
 	  return -1;
 	}
-
-	module.exports = assocIndexOf;
-	});
-
-	var _assocIndexOf$1 = interopDefault(_assocIndexOf);
-
-
-	var require$$0$8 = Object.freeze({
-	  default: _assocIndexOf$1
-	});
-
-	var _listCacheDelete = createCommonjsModule(function (module) {
-	var assocIndexOf = interopDefault(require$$0$8);
 
 	/** Used for built-in method references. */
 	var arrayProto = Array.prototype;
@@ -3719,19 +7597,6 @@
 	  return true;
 	}
 
-	module.exports = listCacheDelete;
-	});
-
-	var _listCacheDelete$1 = interopDefault(_listCacheDelete);
-
-
-	var require$$3$3 = Object.freeze({
-	  default: _listCacheDelete$1
-	});
-
-	var _listCacheGet = createCommonjsModule(function (module) {
-	var assocIndexOf = interopDefault(require$$0$8);
-
 	/**
 	 * Gets the list cache value for `key`.
 	 *
@@ -3748,19 +7613,6 @@
 	  return index < 0 ? undefined : data[index][1];
 	}
 
-	module.exports = listCacheGet;
-	});
-
-	var _listCacheGet$1 = interopDefault(_listCacheGet);
-
-
-	var require$$2$5 = Object.freeze({
-	  default: _listCacheGet$1
-	});
-
-	var _listCacheHas = createCommonjsModule(function (module) {
-	var assocIndexOf = interopDefault(require$$0$8);
-
 	/**
 	 * Checks if a list cache value for `key` exists.
 	 *
@@ -3773,19 +7625,6 @@
 	function listCacheHas(key) {
 	  return assocIndexOf(this.__data__, key) > -1;
 	}
-
-	module.exports = listCacheHas;
-	});
-
-	var _listCacheHas$1 = interopDefault(_listCacheHas);
-
-
-	var require$$1$6 = Object.freeze({
-	  default: _listCacheHas$1
-	});
-
-	var _listCacheSet = createCommonjsModule(function (module) {
-	var assocIndexOf = interopDefault(require$$0$8);
 
 	/**
 	 * Sets the list cache `key` to `value`.
@@ -3808,23 +7647,6 @@
 	  }
 	  return this;
 	}
-
-	module.exports = listCacheSet;
-	});
-
-	var _listCacheSet$1 = interopDefault(_listCacheSet);
-
-
-	var require$$0$10 = Object.freeze({
-	  default: _listCacheSet$1
-	});
-
-	var _ListCache = createCommonjsModule(function (module) {
-	var listCacheClear = interopDefault(require$$4$2),
-	    listCacheDelete = interopDefault(require$$3$3),
-	    listCacheGet = interopDefault(require$$2$5),
-	    listCacheHas = interopDefault(require$$1$6),
-	    listCacheSet = interopDefault(require$$0$10);
 
 	/**
 	 * Creates an list cache object.
@@ -3851,37 +7673,8 @@
 	ListCache.prototype.has = listCacheHas;
 	ListCache.prototype.set = listCacheSet;
 
-	module.exports = ListCache;
-	});
-
-	var _ListCache$1 = interopDefault(_ListCache);
-
-
-	var require$$1$5 = Object.freeze({
-	  default: _ListCache$1
-	});
-
-	var _Map = createCommonjsModule(function (module) {
-	var getNative = interopDefault(require$$1$1),
-	    root = interopDefault(require$$0$3);
-
 	/* Built-in method references that are verified to be native. */
-	var Map = getNative(root, 'Map');
-
-	module.exports = Map;
-	});
-
-	var _Map$1 = interopDefault(_Map);
-
-
-	var require$$0$11 = Object.freeze({
-	    default: _Map$1
-	});
-
-	var _mapCacheClear = createCommonjsModule(function (module) {
-	var Hash = interopDefault(require$$2$1),
-	    ListCache = interopDefault(require$$1$5),
-	    Map = interopDefault(require$$0$11);
+	var Map$1 = getNative(root, 'Map');
 
 	/**
 	 * Removes all key-value entries from the map.
@@ -3893,22 +7686,11 @@
 	function mapCacheClear() {
 	  this.__data__ = {
 	    'hash': new Hash,
-	    'map': new (Map || ListCache),
+	    'map': new (Map$1 || ListCache),
 	    'string': new Hash
 	  };
 	}
 
-	module.exports = mapCacheClear;
-	});
-
-	var _mapCacheClear$1 = interopDefault(_mapCacheClear);
-
-
-	var require$$4 = Object.freeze({
-	  default: _mapCacheClear$1
-	});
-
-	var _isKeyable = createCommonjsModule(function (module) {
 	/**
 	 * Checks if `value` is suitable for use as unique object key.
 	 *
@@ -3922,19 +7704,6 @@
 	    ? (value !== '__proto__')
 	    : (value === null);
 	}
-
-	module.exports = isKeyable;
-	});
-
-	var _isKeyable$1 = interopDefault(_isKeyable);
-
-
-	var require$$0$13 = Object.freeze({
-	  default: _isKeyable$1
-	});
-
-	var _getMapData = createCommonjsModule(function (module) {
-	var isKeyable = interopDefault(require$$0$13);
 
 	/**
 	 * Gets the data for `map`.
@@ -3951,19 +7720,6 @@
 	    : data.map;
 	}
 
-	module.exports = getMapData;
-	});
-
-	var _getMapData$1 = interopDefault(_getMapData);
-
-
-	var require$$0$12 = Object.freeze({
-	  default: _getMapData$1
-	});
-
-	var _mapCacheDelete = createCommonjsModule(function (module) {
-	var getMapData = interopDefault(require$$0$12);
-
 	/**
 	 * Removes `key` and its value from the map.
 	 *
@@ -3976,19 +7732,6 @@
 	function mapCacheDelete(key) {
 	  return getMapData(this, key)['delete'](key);
 	}
-
-	module.exports = mapCacheDelete;
-	});
-
-	var _mapCacheDelete$1 = interopDefault(_mapCacheDelete);
-
-
-	var require$$3$4 = Object.freeze({
-	  default: _mapCacheDelete$1
-	});
-
-	var _mapCacheGet = createCommonjsModule(function (module) {
-	var getMapData = interopDefault(require$$0$12);
 
 	/**
 	 * Gets the map value for `key`.
@@ -4003,19 +7746,6 @@
 	  return getMapData(this, key).get(key);
 	}
 
-	module.exports = mapCacheGet;
-	});
-
-	var _mapCacheGet$1 = interopDefault(_mapCacheGet);
-
-
-	var require$$2$6 = Object.freeze({
-	  default: _mapCacheGet$1
-	});
-
-	var _mapCacheHas = createCommonjsModule(function (module) {
-	var getMapData = interopDefault(require$$0$12);
-
 	/**
 	 * Checks if a map value for `key` exists.
 	 *
@@ -4028,19 +7758,6 @@
 	function mapCacheHas(key) {
 	  return getMapData(this, key).has(key);
 	}
-
-	module.exports = mapCacheHas;
-	});
-
-	var _mapCacheHas$1 = interopDefault(_mapCacheHas);
-
-
-	var require$$1$7 = Object.freeze({
-	  default: _mapCacheHas$1
-	});
-
-	var _mapCacheSet = createCommonjsModule(function (module) {
-	var getMapData = interopDefault(require$$0$12);
 
 	/**
 	 * Sets the map `key` to `value`.
@@ -4056,23 +7773,6 @@
 	  getMapData(this, key).set(key, value);
 	  return this;
 	}
-
-	module.exports = mapCacheSet;
-	});
-
-	var _mapCacheSet$1 = interopDefault(_mapCacheSet);
-
-
-	var require$$0$14 = Object.freeze({
-	  default: _mapCacheSet$1
-	});
-
-	var _MapCache = createCommonjsModule(function (module) {
-	var mapCacheClear = interopDefault(require$$4),
-	    mapCacheDelete = interopDefault(require$$3$4),
-	    mapCacheGet = interopDefault(require$$2$6),
-	    mapCacheHas = interopDefault(require$$1$7),
-	    mapCacheSet = interopDefault(require$$0$14);
 
 	/**
 	 * Creates a map cache object to store key-value pairs.
@@ -4099,19 +7799,8 @@
 	MapCache.prototype.has = mapCacheHas;
 	MapCache.prototype.set = mapCacheSet;
 
-	module.exports = MapCache;
-	});
-
-	var _MapCache$1 = interopDefault(_MapCache);
-
-
-	var require$$2 = Object.freeze({
-	  default: _MapCache$1
-	});
-
-	var _setCacheAdd = createCommonjsModule(function (module) {
 	/** Used to stand-in for `undefined` hash values. */
-	var HASH_UNDEFINED = '__lodash_hash_undefined__';
+	var HASH_UNDEFINED$2 = '__lodash_hash_undefined__';
 
 	/**
 	 * Adds `value` to the array cache.
@@ -4124,21 +7813,10 @@
 	 * @returns {Object} Returns the cache instance.
 	 */
 	function setCacheAdd(value) {
-	  this.__data__.set(value, HASH_UNDEFINED);
+	  this.__data__.set(value, HASH_UNDEFINED$2);
 	  return this;
 	}
 
-	module.exports = setCacheAdd;
-	});
-
-	var _setCacheAdd$1 = interopDefault(_setCacheAdd);
-
-
-	var require$$1$8 = Object.freeze({
-	  default: _setCacheAdd$1
-	});
-
-	var _setCacheHas = createCommonjsModule(function (module) {
 	/**
 	 * Checks if `value` is in the array cache.
 	 *
@@ -4151,21 +7829,6 @@
 	function setCacheHas(value) {
 	  return this.__data__.has(value);
 	}
-
-	module.exports = setCacheHas;
-	});
-
-	var _setCacheHas$1 = interopDefault(_setCacheHas);
-
-
-	var require$$0$15 = Object.freeze({
-	  default: _setCacheHas$1
-	});
-
-	var _SetCache = createCommonjsModule(function (module) {
-	var MapCache = interopDefault(require$$2),
-	    setCacheAdd = interopDefault(require$$1$8),
-	    setCacheHas = interopDefault(require$$0$15);
 
 	/**
 	 *
@@ -4189,64 +7852,52 @@
 	SetCache.prototype.add = SetCache.prototype.push = setCacheAdd;
 	SetCache.prototype.has = setCacheHas;
 
-	module.exports = SetCache;
-	});
-
-	var _SetCache$1 = interopDefault(_SetCache);
-
-
-	var require$$5 = Object.freeze({
-	  default: _SetCache$1
-	});
-
-	var _indexOfNaN = createCommonjsModule(function (module) {
 	/**
-	 * Gets the index at which the first occurrence of `NaN` is found in `array`.
+	 * The base implementation of `_.findIndex` and `_.findLastIndex` without
+	 * support for iteratee shorthands.
 	 *
 	 * @private
-	 * @param {Array} array The array to search.
+	 * @param {Array} array The array to inspect.
+	 * @param {Function} predicate The function invoked per iteration.
 	 * @param {number} fromIndex The index to search from.
 	 * @param {boolean} [fromRight] Specify iterating from right to left.
-	 * @returns {number} Returns the index of the matched `NaN`, else `-1`.
+	 * @returns {number} Returns the index of the matched value, else `-1`.
 	 */
-	function indexOfNaN(array, fromIndex, fromRight) {
+	function baseFindIndex(array, predicate, fromIndex, fromRight) {
 	  var length = array.length,
 	      index = fromIndex + (fromRight ? 1 : -1);
 
 	  while ((fromRight ? index-- : ++index < length)) {
-	    var other = array[index];
-	    if (other !== other) {
+	    if (predicate(array[index], index, array)) {
 	      return index;
 	    }
 	  }
 	  return -1;
 	}
 
-	module.exports = indexOfNaN;
-	});
-
-	var _indexOfNaN$1 = interopDefault(_indexOfNaN);
-
-
-	var require$$0$17 = Object.freeze({
-	  default: _indexOfNaN$1
-	});
-
-	var _baseIndexOf = createCommonjsModule(function (module) {
-	var indexOfNaN = interopDefault(require$$0$17);
+	/**
+	 * The base implementation of `_.isNaN` without support for number objects.
+	 *
+	 * @private
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is `NaN`, else `false`.
+	 */
+	function baseIsNaN(value) {
+	  return value !== value;
+	}
 
 	/**
 	 * The base implementation of `_.indexOf` without `fromIndex` bounds checks.
 	 *
 	 * @private
-	 * @param {Array} array The array to search.
+	 * @param {Array} array The array to inspect.
 	 * @param {*} value The value to search for.
 	 * @param {number} fromIndex The index to search from.
 	 * @returns {number} Returns the index of the matched value, else `-1`.
 	 */
 	function baseIndexOf(array, value, fromIndex) {
 	  if (value !== value) {
-	    return indexOfNaN(array, fromIndex);
+	    return baseFindIndex(array, baseIsNaN, fromIndex);
 	  }
 	  var index = fromIndex - 1,
 	      length = array.length;
@@ -4259,25 +7910,12 @@
 	  return -1;
 	}
 
-	module.exports = baseIndexOf;
-	});
-
-	var _baseIndexOf$1 = interopDefault(_baseIndexOf);
-
-
-	var require$$0$16 = Object.freeze({
-	  default: _baseIndexOf$1
-	});
-
-	var _arrayIncludes = createCommonjsModule(function (module) {
-	var baseIndexOf = interopDefault(require$$0$16);
-
 	/**
 	 * A specialized version of `_.includes` for arrays without support for
 	 * specifying an index to search from.
 	 *
 	 * @private
-	 * @param {Array} [array] The array to search.
+	 * @param {Array} [array] The array to inspect.
 	 * @param {*} target The value to search for.
 	 * @returns {boolean} Returns `true` if `target` is found, else `false`.
 	 */
@@ -4286,22 +7924,11 @@
 	  return !!length && baseIndexOf(array, value, 0) > -1;
 	}
 
-	module.exports = arrayIncludes;
-	});
-
-	var _arrayIncludes$1 = interopDefault(_arrayIncludes);
-
-
-	var require$$4$3 = Object.freeze({
-	  default: _arrayIncludes$1
-	});
-
-	var _arrayIncludesWith = createCommonjsModule(function (module) {
 	/**
 	 * This function is like `arrayIncludes` except that it accepts a comparator.
 	 *
 	 * @private
-	 * @param {Array} [array] The array to search.
+	 * @param {Array} [array] The array to inspect.
 	 * @param {*} target The value to search for.
 	 * @param {Function} comparator The comparator invoked per element.
 	 * @returns {boolean} Returns `true` if `target` is found, else `false`.
@@ -4318,17 +7945,6 @@
 	  return false;
 	}
 
-	module.exports = arrayIncludesWith;
-	});
-
-	var _arrayIncludesWith$1 = interopDefault(_arrayIncludesWith);
-
-
-	var require$$3$5 = Object.freeze({
-	  default: _arrayIncludesWith$1
-	});
-
-	var _arrayMap = createCommonjsModule(function (module) {
 	/**
 	 * A specialized version of `_.map` for arrays without support for iteratee
 	 * shorthands.
@@ -4349,19 +7965,8 @@
 	  return result;
 	}
 
-	module.exports = arrayMap;
-	});
-
-	var _arrayMap$1 = interopDefault(_arrayMap);
-
-
-	var require$$2$7 = Object.freeze({
-	  default: _arrayMap$1
-	});
-
-	var _baseUnary = createCommonjsModule(function (module) {
 	/**
-	 * The base implementation of `_.unary` without support for storing wrapper metadata.
+	 * The base implementation of `_.unary` without support for storing metadata.
 	 *
 	 * @private
 	 * @param {Function} func The function to cap arguments for.
@@ -4373,17 +7978,6 @@
 	  };
 	}
 
-	module.exports = baseUnary;
-	});
-
-	var _baseUnary$1 = interopDefault(_baseUnary);
-
-
-	var require$$1$9 = Object.freeze({
-	  default: _baseUnary$1
-	});
-
-	var _cacheHas = createCommonjsModule(function (module) {
 	/**
 	 * Checks if a cache value for `key` exists.
 	 *
@@ -4395,24 +7989,6 @@
 	function cacheHas(cache, key) {
 	  return cache.has(key);
 	}
-
-	module.exports = cacheHas;
-	});
-
-	var _cacheHas$1 = interopDefault(_cacheHas);
-
-
-	var require$$0$18 = Object.freeze({
-	  default: _cacheHas$1
-	});
-
-	var _baseDifference = createCommonjsModule(function (module) {
-	var SetCache = interopDefault(require$$5),
-	    arrayIncludes = interopDefault(require$$4$3),
-	    arrayIncludesWith = interopDefault(require$$3$5),
-	    arrayMap = interopDefault(require$$2$7),
-	    baseUnary = interopDefault(require$$1$9),
-	    cacheHas = interopDefault(require$$0$18);
 
 	/** Used as the size to enable large array optimizations. */
 	var LARGE_ARRAY_SIZE = 200;
@@ -4473,17 +8049,6 @@
 	  return result;
 	}
 
-	module.exports = baseDifference;
-	});
-
-	var _baseDifference$1 = interopDefault(_baseDifference);
-
-
-	var require$$3 = Object.freeze({
-	  default: _baseDifference$1
-	});
-
-	var _arrayPush = createCommonjsModule(function (module) {
 	/**
 	 * Appends the elements of `values` to `array`.
 	 *
@@ -4503,83 +8068,24 @@
 	  return array;
 	}
 
-	module.exports = arrayPush;
-	});
+	/** Built-in value references. */
+	var Symbol$1 = root.Symbol;
 
-	var _arrayPush$1 = interopDefault(_arrayPush);
-
-
-	var require$$1$10 = Object.freeze({
-	  default: _arrayPush$1
-	});
-
-	var _baseProperty = createCommonjsModule(function (module) {
-	/**
-	 * The base implementation of `_.property` without support for deep paths.
-	 *
-	 * @private
-	 * @param {string} key The key of the property to get.
-	 * @returns {Function} Returns the new accessor function.
-	 */
-	function baseProperty(key) {
-	  return function(object) {
-	    return object == null ? undefined : object[key];
-	  };
-	}
-
-	module.exports = baseProperty;
-	});
-
-	var _baseProperty$1 = interopDefault(_baseProperty);
-
-
-	var require$$0$21 = Object.freeze({
-	  default: _baseProperty$1
-	});
-
-	var _getLength = createCommonjsModule(function (module) {
-	var baseProperty = interopDefault(require$$0$21);
-
-	/**
-	 * Gets the "length" property value of `object`.
-	 *
-	 * **Note:** This function is used to avoid a
-	 * [JIT bug](https://bugs.webkit.org/show_bug.cgi?id=142792) that affects
-	 * Safari on at least iOS 8.1-8.3 ARM64.
-	 *
-	 * @private
-	 * @param {Object} object The object to query.
-	 * @returns {*} Returns the "length" value.
-	 */
-	var getLength = baseProperty('length');
-
-	module.exports = getLength;
-	});
-
-	var _getLength$1 = interopDefault(_getLength);
-
-
-	var require$$2$9 = Object.freeze({
-		default: _getLength$1
-	});
-
-	var isLength = createCommonjsModule(function (module) {
 	/** Used as references for various `Number` constants. */
 	var MAX_SAFE_INTEGER = 9007199254740991;
 
 	/**
 	 * Checks if `value` is a valid array-like length.
 	 *
-	 * **Note:** This function is loosely based on
-	 * [`ToLength`](http://ecma-international.org/ecma-262/6.0/#sec-tolength).
+	 * **Note:** This method is loosely based on
+	 * [`ToLength`](http://ecma-international.org/ecma-262/7.0/#sec-tolength).
 	 *
 	 * @static
 	 * @memberOf _
 	 * @since 4.0.0
 	 * @category Lang
 	 * @param {*} value The value to check.
-	 * @returns {boolean} Returns `true` if `value` is a valid length,
-	 *  else `false`.
+	 * @returns {boolean} Returns `true` if `value` is a valid length, else `false`.
 	 * @example
 	 *
 	 * _.isLength(3);
@@ -4598,21 +8104,6 @@
 	  return typeof value == 'number' &&
 	    value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
 	}
-
-	module.exports = isLength;
-	});
-
-	var isLength$1 = interopDefault(isLength);
-
-
-	var require$$0$22 = Object.freeze({
-	  default: isLength$1
-	});
-
-	var isArrayLike = createCommonjsModule(function (module) {
-	var getLength = interopDefault(require$$2$9),
-	    isFunction = interopDefault(require$$2$2),
-	    isLength = interopDefault(require$$0$22);
 
 	/**
 	 * Checks if `value` is array-like. A value is considered array-like if it's
@@ -4640,20 +8131,9 @@
 	 * // => false
 	 */
 	function isArrayLike(value) {
-	  return value != null && isLength(getLength(value)) && !isFunction(value);
+	  return value != null && isLength(value.length) && !isFunction(value);
 	}
 
-	module.exports = isArrayLike;
-	});
-
-	var isArrayLike$1 = interopDefault(isArrayLike);
-
-
-	var require$$1$12 = Object.freeze({
-	  default: isArrayLike$1
-	});
-
-	var isObjectLike = createCommonjsModule(function (module) {
 	/**
 	 * Checks if `value` is object-like. A value is object-like if it's not `null`
 	 * and has a `typeof` result of "object".
@@ -4681,20 +8161,6 @@
 	function isObjectLike(value) {
 	  return !!value && typeof value == 'object';
 	}
-
-	module.exports = isObjectLike;
-	});
-
-	var isObjectLike$1 = interopDefault(isObjectLike);
-
-
-	var require$$0$23 = Object.freeze({
-	  default: isObjectLike$1
-	});
-
-	var isArrayLikeObject = createCommonjsModule(function (module) {
-	var isArrayLike = interopDefault(require$$1$12),
-	    isObjectLike = interopDefault(require$$0$23);
 
 	/**
 	 * This method is like `_.isArrayLike` except that it also checks if `value`
@@ -4725,37 +8191,24 @@
 	  return isObjectLike(value) && isArrayLike(value);
 	}
 
-	module.exports = isArrayLikeObject;
-	});
-
-	var isArrayLikeObject$1 = interopDefault(isArrayLikeObject);
-
-
-	var require$$0$20 = Object.freeze({
-	  default: isArrayLikeObject$1
-	});
-
-	var isArguments = createCommonjsModule(function (module) {
-	var isArrayLikeObject = interopDefault(require$$0$20);
-
 	/** `Object#toString` result references. */
 	var argsTag = '[object Arguments]';
 
 	/** Used for built-in method references. */
-	var objectProto = Object.prototype;
+	var objectProto$4 = Object.prototype;
 
 	/** Used to check objects for own properties. */
-	var hasOwnProperty = objectProto.hasOwnProperty;
+	var hasOwnProperty$3 = objectProto$4.hasOwnProperty;
 
 	/**
 	 * Used to resolve the
-	 * [`toStringTag`](http://ecma-international.org/ecma-262/6.0/#sec-object.prototype.tostring)
+	 * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
 	 * of values.
 	 */
-	var objectToString = objectProto.toString;
+	var objectToString$1 = objectProto$4.toString;
 
 	/** Built-in value references. */
-	var propertyIsEnumerable = objectProto.propertyIsEnumerable;
+	var propertyIsEnumerable = objectProto$4.propertyIsEnumerable;
 
 	/**
 	 * Checks if `value` is likely an `arguments` object.
@@ -4765,7 +8218,7 @@
 	 * @since 0.1.0
 	 * @category Lang
 	 * @param {*} value The value to check.
-	 * @returns {boolean} Returns `true` if `value` is correctly classified,
+	 * @returns {boolean} Returns `true` if `value` is an `arguments` object,
 	 *  else `false`.
 	 * @example
 	 *
@@ -4776,33 +8229,20 @@
 	 * // => false
 	 */
 	function isArguments(value) {
-	  // Safari 8.1 incorrectly makes `arguments.callee` enumerable in strict mode.
-	  return isArrayLikeObject(value) && hasOwnProperty.call(value, 'callee') &&
-	    (!propertyIsEnumerable.call(value, 'callee') || objectToString.call(value) == argsTag);
+	  // Safari 8.1 makes `arguments.callee` enumerable in strict mode.
+	  return isArrayLikeObject(value) && hasOwnProperty$3.call(value, 'callee') &&
+	    (!propertyIsEnumerable.call(value, 'callee') || objectToString$1.call(value) == argsTag);
 	}
 
-	module.exports = isArguments;
-	});
-
-	var isArguments$1 = interopDefault(isArguments);
-
-
-	var require$$1$11 = Object.freeze({
-	  default: isArguments$1
-	});
-
-	var isArray = createCommonjsModule(function (module) {
 	/**
 	 * Checks if `value` is classified as an `Array` object.
 	 *
 	 * @static
 	 * @memberOf _
 	 * @since 0.1.0
-	 * @type {Function}
 	 * @category Lang
 	 * @param {*} value The value to check.
-	 * @returns {boolean} Returns `true` if `value` is correctly classified,
-	 *  else `false`.
+	 * @returns {boolean} Returns `true` if `value` is an array, else `false`.
 	 * @example
 	 *
 	 * _.isArray([1, 2, 3]);
@@ -4819,19 +8259,8 @@
 	 */
 	var isArray = Array.isArray;
 
-	module.exports = isArray;
-	});
-
-	var isArray$1 = interopDefault(isArray);
-
-
-	var require$$0$24 = Object.freeze({
-		default: isArray$1
-	});
-
-	var _isFlattenable = createCommonjsModule(function (module) {
-	var isArguments = interopDefault(require$$1$11),
-	    isArray = interopDefault(require$$0$24);
+	/** Built-in value references. */
+	var spreadableSymbol = Symbol$1 ? Symbol$1.isConcatSpreadable : undefined;
 
 	/**
 	 * Checks if `value` is a flattenable `arguments` object or array.
@@ -4841,22 +8270,9 @@
 	 * @returns {boolean} Returns `true` if `value` is flattenable, else `false`.
 	 */
 	function isFlattenable(value) {
-	  return isArray(value) || isArguments(value);
+	  return isArray(value) || isArguments(value) ||
+	    !!(spreadableSymbol && value && value[spreadableSymbol]);
 	}
-
-	module.exports = isFlattenable;
-	});
-
-	var _isFlattenable$1 = interopDefault(_isFlattenable);
-
-
-	var require$$0$19 = Object.freeze({
-	  default: _isFlattenable$1
-	});
-
-	var _baseFlatten = createCommonjsModule(function (module) {
-	var arrayPush = interopDefault(require$$1$10),
-	    isFlattenable = interopDefault(require$$0$19);
 
 	/**
 	 * The base implementation of `_.flatten` with support for restricting flattening.
@@ -4892,17 +8308,6 @@
 	  return result;
 	}
 
-	module.exports = baseFlatten;
-	});
-
-	var _baseFlatten$1 = interopDefault(_baseFlatten);
-
-
-	var require$$2$8 = Object.freeze({
-	  default: _baseFlatten$1
-	});
-
-	var _apply = createCommonjsModule(function (module) {
 	/**
 	 * A faster alternative to `Function#apply`, this function invokes `func`
 	 * with the `this` binding of `thisArg` and the arguments of `args`.
@@ -4914,8 +8319,7 @@
 	 * @returns {*} Returns the result of `func`.
 	 */
 	function apply(func, thisArg, args) {
-	  var length = args.length;
-	  switch (length) {
+	  switch (args.length) {
 	    case 0: return func.call(thisArg);
 	    case 1: return func.call(thisArg, args[0]);
 	    case 2: return func.call(thisArg, args[0], args[1]);
@@ -4924,280 +8328,19 @@
 	  return func.apply(thisArg, args);
 	}
 
-	module.exports = apply;
-	});
-
-	var _apply$1 = interopDefault(_apply);
-
-
-	var require$$1$13 = Object.freeze({
-	  default: _apply$1
-	});
-
-	var isSymbol = createCommonjsModule(function (module) {
-	var isObjectLike = interopDefault(require$$0$23);
-
-	/** `Object#toString` result references. */
-	var symbolTag = '[object Symbol]';
-
-	/** Used for built-in method references. */
-	var objectProto = Object.prototype;
-
-	/**
-	 * Used to resolve the
-	 * [`toStringTag`](http://ecma-international.org/ecma-262/6.0/#sec-object.prototype.tostring)
-	 * of values.
-	 */
-	var objectToString = objectProto.toString;
-
-	/**
-	 * Checks if `value` is classified as a `Symbol` primitive or object.
-	 *
-	 * @static
-	 * @memberOf _
-	 * @since 4.0.0
-	 * @category Lang
-	 * @param {*} value The value to check.
-	 * @returns {boolean} Returns `true` if `value` is correctly classified,
-	 *  else `false`.
-	 * @example
-	 *
-	 * _.isSymbol(Symbol.iterator);
-	 * // => true
-	 *
-	 * _.isSymbol('abc');
-	 * // => false
-	 */
-	function isSymbol(value) {
-	  return typeof value == 'symbol' ||
-	    (isObjectLike(value) && objectToString.call(value) == symbolTag);
-	}
-
-	module.exports = isSymbol;
-	});
-
-	var isSymbol$1 = interopDefault(isSymbol);
-
-
-	var require$$0$29 = Object.freeze({
-	  default: isSymbol$1
-	});
-
-	var toNumber = createCommonjsModule(function (module) {
-	var isFunction = interopDefault(require$$2$2),
-	    isObject = interopDefault(require$$1$3),
-	    isSymbol = interopDefault(require$$0$29);
-
-	/** Used as references for various `Number` constants. */
-	var NAN = 0 / 0;
-
-	/** Used to match leading and trailing whitespace. */
-	var reTrim = /^\s+|\s+$/g;
-
-	/** Used to detect bad signed hexadecimal string values. */
-	var reIsBadHex = /^[-+]0x[0-9a-f]+$/i;
-
-	/** Used to detect binary string values. */
-	var reIsBinary = /^0b[01]+$/i;
-
-	/** Used to detect octal string values. */
-	var reIsOctal = /^0o[0-7]+$/i;
-
-	/** Built-in method references without a dependency on `root`. */
-	var freeParseInt = parseInt;
-
-	/**
-	 * Converts `value` to a number.
-	 *
-	 * @static
-	 * @memberOf _
-	 * @since 4.0.0
-	 * @category Lang
-	 * @param {*} value The value to process.
-	 * @returns {number} Returns the number.
-	 * @example
-	 *
-	 * _.toNumber(3.2);
-	 * // => 3.2
-	 *
-	 * _.toNumber(Number.MIN_VALUE);
-	 * // => 5e-324
-	 *
-	 * _.toNumber(Infinity);
-	 * // => Infinity
-	 *
-	 * _.toNumber('3.2');
-	 * // => 3.2
-	 */
-	function toNumber(value) {
-	  if (typeof value == 'number') {
-	    return value;
-	  }
-	  if (isSymbol(value)) {
-	    return NAN;
-	  }
-	  if (isObject(value)) {
-	    var other = isFunction(value.valueOf) ? value.valueOf() : value;
-	    value = isObject(other) ? (other + '') : other;
-	  }
-	  if (typeof value != 'string') {
-	    return value === 0 ? value : +value;
-	  }
-	  value = value.replace(reTrim, '');
-	  var isBinary = reIsBinary.test(value);
-	  return (isBinary || reIsOctal.test(value))
-	    ? freeParseInt(value.slice(2), isBinary ? 2 : 8)
-	    : (reIsBadHex.test(value) ? NAN : +value);
-	}
-
-	module.exports = toNumber;
-	});
-
-	var toNumber$1 = interopDefault(toNumber);
-
-
-	var require$$0$28 = Object.freeze({
-	  default: toNumber$1
-	});
-
-	var toFinite = createCommonjsModule(function (module) {
-	var toNumber = interopDefault(require$$0$28);
-
-	/** Used as references for various `Number` constants. */
-	var INFINITY = 1 / 0,
-	    MAX_INTEGER = 1.7976931348623157e+308;
-
-	/**
-	 * Converts `value` to a finite number.
-	 *
-	 * @static
-	 * @memberOf _
-	 * @since 4.12.0
-	 * @category Lang
-	 * @param {*} value The value to convert.
-	 * @returns {number} Returns the converted number.
-	 * @example
-	 *
-	 * _.toFinite(3.2);
-	 * // => 3.2
-	 *
-	 * _.toFinite(Number.MIN_VALUE);
-	 * // => 5e-324
-	 *
-	 * _.toFinite(Infinity);
-	 * // => 1.7976931348623157e+308
-	 *
-	 * _.toFinite('3.2');
-	 * // => 3.2
-	 */
-	function toFinite(value) {
-	  if (!value) {
-	    return value === 0 ? value : 0;
-	  }
-	  value = toNumber(value);
-	  if (value === INFINITY || value === -INFINITY) {
-	    var sign = (value < 0 ? -1 : 1);
-	    return sign * MAX_INTEGER;
-	  }
-	  return value === value ? value : 0;
-	}
-
-	module.exports = toFinite;
-	});
-
-	var toFinite$1 = interopDefault(toFinite);
-
-
-	var require$$0$27 = Object.freeze({
-	  default: toFinite$1
-	});
-
-	var toInteger = createCommonjsModule(function (module) {
-	var toFinite = interopDefault(require$$0$27);
-
-	/**
-	 * Converts `value` to an integer.
-	 *
-	 * **Note:** This method is loosely based on
-	 * [`ToInteger`](http://www.ecma-international.org/ecma-262/6.0/#sec-tointeger).
-	 *
-	 * @static
-	 * @memberOf _
-	 * @since 4.0.0
-	 * @category Lang
-	 * @param {*} value The value to convert.
-	 * @returns {number} Returns the converted integer.
-	 * @example
-	 *
-	 * _.toInteger(3.2);
-	 * // => 3
-	 *
-	 * _.toInteger(Number.MIN_VALUE);
-	 * // => 0
-	 *
-	 * _.toInteger(Infinity);
-	 * // => 1.7976931348623157e+308
-	 *
-	 * _.toInteger('3.2');
-	 * // => 3
-	 */
-	function toInteger(value) {
-	  var result = toFinite(value),
-	      remainder = result % 1;
-
-	  return result === result ? (remainder ? result - remainder : result) : 0;
-	}
-
-	module.exports = toInteger;
-	});
-
-	var toInteger$1 = interopDefault(toInteger);
-
-
-	var require$$0$26 = Object.freeze({
-	  default: toInteger$1
-	});
-
-	var rest = createCommonjsModule(function (module) {
-	var apply = interopDefault(require$$1$13),
-	    toInteger = interopDefault(require$$0$26);
-
-	/** Used as the `TypeError` message for "Functions" methods. */
-	var FUNC_ERROR_TEXT = 'Expected a function';
-
 	/* Built-in method references for those with the same name as other `lodash` methods. */
 	var nativeMax = Math.max;
 
 	/**
-	 * Creates a function that invokes `func` with the `this` binding of the
-	 * created function and arguments from `start` and beyond provided as
-	 * an array.
+	 * The base implementation of `_.rest` which doesn't validate or coerce arguments.
 	 *
-	 * **Note:** This method is based on the
-	 * [rest parameter](https://mdn.io/rest_parameters).
-	 *
-	 * @static
-	 * @memberOf _
-	 * @since 4.0.0
-	 * @category Function
+	 * @private
 	 * @param {Function} func The function to apply a rest parameter to.
 	 * @param {number} [start=func.length-1] The start position of the rest parameter.
 	 * @returns {Function} Returns the new function.
-	 * @example
-	 *
-	 * var say = _.rest(function(what, names) {
-	 *   return what + ' ' + _.initial(names).join(', ') +
-	 *     (_.size(names) > 1 ? ', & ' : '') + _.last(names);
-	 * });
-	 *
-	 * say('hello', 'fred', 'barney', 'pebbles');
-	 * // => 'hello fred, barney, & pebbles'
 	 */
-	function rest(func, start) {
-	  if (typeof func != 'function') {
-	    throw new TypeError(FUNC_ERROR_TEXT);
-	  }
-	  start = nativeMax(start === undefined ? (func.length - 1) : toInteger(start), 0);
+	function baseRest(func, start) {
+	  start = nativeMax(start === undefined ? (func.length - 1) : start, 0);
 	  return function() {
 	    var args = arguments,
 	        index = -1,
@@ -5207,13 +8350,8 @@
 	    while (++index < length) {
 	      array[index] = args[start + index];
 	    }
-	    switch (start) {
-	      case 0: return func.call(this, array);
-	      case 1: return func.call(this, args[0], array);
-	      case 2: return func.call(this, args[0], args[1], array);
-	    }
-	    var otherArgs = Array(start + 1);
 	    index = -1;
+	    var otherArgs = Array(start + 1);
 	    while (++index < start) {
 	      otherArgs[index] = args[index];
 	    }
@@ -5222,27 +8360,13 @@
 	  };
 	}
 
-	module.exports = rest;
-	});
-
-	var rest$1 = interopDefault(rest);
-
-
-	var require$$0$25 = Object.freeze({
-	  default: rest$1
-	});
-
-	var difference = createCommonjsModule(function (module) {
-	var baseDifference = interopDefault(require$$3),
-	    baseFlatten = interopDefault(require$$2$8),
-	    isArrayLikeObject = interopDefault(require$$0$20),
-	    rest = interopDefault(require$$0$25);
-
 	/**
-	 * Creates an array of unique `array` values not included in the other given
-	 * arrays using [`SameValueZero`](http://ecma-international.org/ecma-262/6.0/#sec-samevaluezero)
+	 * Creates an array of `array` values not included in the other given arrays
+	 * using [`SameValueZero`](http://ecma-international.org/ecma-262/7.0/#sec-samevaluezero)
 	 * for equality comparisons. The order of result values is determined by the
 	 * order they occur in the first array.
+	 *
+	 * **Note:** Unlike `_.pullAll`, this method returns a new array.
 	 *
 	 * @static
 	 * @memberOf _
@@ -5257,34 +8381,30 @@
 	 * _.difference([2, 1], [2, 3]);
 	 * // => [1]
 	 */
-	var difference = rest(function(array, values) {
+	var difference = baseRest(function(array, values) {
 	  return isArrayLikeObject(array)
 	    ? baseDifference(array, baseFlatten(values, 1, isArrayLikeObject, true))
 	    : [];
 	});
 
-	module.exports = difference;
-	});
-
-	var difference$1 = interopDefault(difference);
-
-	var instance$3;
 	/** LabelFetcher Class
-	 * Static class
+	 * Static class that monitors the dome for labels that need to be translated
 	 */
 
-	var LabelFetcherClass = function () {
-	  function LabelFetcherClass(languages) {
-	    classCallCheck(this, LabelFetcherClass);
+	var LabelFetcher = function () {
+	  function LabelFetcher(languages) {
+	    classCallCheck(this, LabelFetcher);
 
 	    this.languages = typeof languages === 'undefined' ? ['en'] : languages;
 	    this.labels = [];
 	    var me = this;
 	  }
 
-	  createClass(LabelFetcherClass, [{
+	  createClass(LabelFetcher, [{
 	    key: 'Monitor',
-	    value: function Monitor(Id) {
+	    value: function Monitor() {
+	      var Id = arguments.length <= 0 || arguments[0] === undefined ? 'body' : arguments[0];
+
 	      var me = this;
 	      // configuration of the observer:
 	      var observerconfig = {
@@ -5293,47 +8413,53 @@
 	        characterData: false
 	      };
 
-	      var labeltarget = document.getElementById(Id);
+	      var labeltarget = $(Id)[0];
 
 	      // create an observer instance
 	      var labelobserver = new MutationObserver(function (mutations) {
+	        console.log("There was a mutation!");
 	        mutations.forEach(function (mutation) {
 	          console.log(mutation.type, mutation);
 	          if (mutation.addedNodes.length > 0) {
-	            //  var items = mutation.target.children.getElementsByClassName("wikidata-fetchlabel");
-	            me.Populate(mutation.target.id);
-	            //map.sidebarcontrols['rightsidebar'].enable('legendpane');
+	            console.log("going to populate label " + Id); //+ mutation.target.id);
+	            me.Populate(Id);
 	          } else {
-	              //          map.sidebarcontrols['rightsidebar'].disable('legendpane');
-	            }
+	            //          map.sidebarcontrols['rightsidebar'].disable('legendpane');
+	          }
 	        });
 	      });
+	      console.log("going to monitor this label " + Id, labeltarget);
 	      labelobserver.observe(labeltarget, observerconfig);
 	    }
 	  }, {
 	    key: 'Populate',
 	    value: function Populate(Id) {
 	      var labels = [];
-	      var labelelements = $('#' + Id + ' .wikidata-fetchlabel').get();
+	      var labelelements = $(Id + ' .wikidata-fetchlabel[data-wikidata]').get();
 	      console.log("Find all items to translate in " + Id, labelelements);
 	      if (labelelements.length == 0) {
 	        return Promise.resolve([]);
 	      }
-	      $('#' + Id + ' .wikidata-fetchlabel').addClass("wikidata-fetchlabel-processing").removeClass("wikidata-fetchlabel");
 	      for (var i = 0; i < labelelements.length; i++) {
-	        console.log(labelelements[i].dataset.wikidata);
-	        labels.push(labelelements[i].dataset.wikidata);
+	        console.log("Wikidata" + labelelements[i].dataset.wikidata, labelelements[i]);
+	        if (!labelelements[i].dataset.wikidata || labelelements[i].dataset.wikidata.length > 0) {
+	          labels.push(labelelements[i].dataset.wikidata);
+	        } else {
+	          console.error("You inserted an empty wikidata data attribute. This will break things.");
+	        }
 	      }
 	      // Deduplicate entries:
 	      var labels = labels.filter(function (elem, index, self) {
 	        return index == self.indexOf(elem);
 	      });
 	      console.log("Labels", labels);
+
+	      $(Id + ' .wikidata-fetchlabel').addClass("wikidata-fetchlabel-processing").removeClass("wikidata-fetchlabel");
 	      return this.getLabels(labels).then(function (labeltext) {
 	        for (var Q in labeltext) {
-	          $('[data-wikidata="' + Q + '"]').text(labeltext[Q].label);
-	          $('[data-wikidata="' + Q + '"]').prop('title', labeltext[Q].description);
-	          $('[data-wikidata="' + Q + '"]').removeClass("wikidata-fetchlabel-processing").addClass("wikidata-fetchlabel-processed");
+	          $('.wikidata-fetchlabel-processing[data-wikidata="' + Q + '"]').text(labeltext[Q].label);
+	          $('.wikidata-fetchlabel-processing[data-wikidata="' + Q + '"]').prop('title', labeltext[Q].description);
+	          $('.wikidata-fetchlabel-processing[data-wikidata="' + Q + '"]').removeClass("wikidata-fetchlabel-processing").addClass("wikidata-fetchlabel-processed");
 	        }
 	      });
 	    }
@@ -5344,7 +8470,7 @@
 	      var simplifiedClaims, labels, entity, url;
 	      var langs = this.languages.join(',');
 
-	      var QsDelta = difference$1(Qs, Object.keys(this.labels));
+	      var QsDelta = difference(Qs, Object.keys(this.labels));
 	      if (QsDelta.length == 0) {
 	        var returnlabels = this.findLabels(Qs);
 	        // figurethemout
@@ -5400,20 +8526,568 @@
 	      return result;
 	    }
 	  }]);
-	  return LabelFetcherClass;
+	  return LabelFetcher;
 	}();
 
-	function LabelFetcher(languages) {
-	  if (typeof instance$3 === 'undefined') {
-	    instance$3 = new LabelFetcherClass(languages);
-	  }
-	  return instance$3;
+	var LabelFetcher$1 = {
+	  LabelFetcher: LabelFetcher
+	};
+
+	var spin = createCommonjsModule(function (module, exports) {
+	/**
+	 * Copyright (c) 2011-2014 Felix Gnass
+	 * Licensed under the MIT license
+	 */
+	(function(root, factory) {
+
+	  /* CommonJS */
+	  if (typeof exports == 'object')  module.exports = factory()
+
+	  /* AMD module */
+	  else if (typeof define == 'function' && define.amd) define(factory)
+
+	  /* Browser global */
+	  else root.Spinner = factory()
 	}
+	(commonjsGlobal, function() {
+	  "use strict";
+
+	  var prefixes = ['webkit', 'Moz', 'ms', 'O'] /* Vendor prefixes */
+	    , animations = {} /* Animation rules keyed by their name */
+	    , useCssAnimations /* Whether to use CSS animations or setTimeout */
+
+	  /**
+	   * Utility function to create elements. If no tag name is given,
+	   * a DIV is created. Optionally properties can be passed.
+	   */
+	  function createEl(tag, prop) {
+	    var el = document.createElement(tag || 'div')
+	      , n
+
+	    for(n in prop) el[n] = prop[n]
+	    return el
+	  }
+
+	  /**
+	   * Appends children and returns the parent.
+	   */
+	  function ins(parent /* child1, child2, ...*/) {
+	    for (var i=1, n=arguments.length; i<n; i++)
+	      parent.appendChild(arguments[i])
+
+	    return parent
+	  }
+
+	  /**
+	   * Insert a new stylesheet to hold the @keyframe or VML rules.
+	   */
+	  var sheet = (function() {
+	    var el = createEl('style', {type : 'text/css'})
+	    ins(document.getElementsByTagName('head')[0], el)
+	    return el.sheet || el.styleSheet
+	  }())
+
+	  /**
+	   * Creates an opacity keyframe animation rule and returns its name.
+	   * Since most mobile Webkits have timing issues with animation-delay,
+	   * we create separate rules for each line/segment.
+	   */
+	  function addAnimation(alpha, trail, i, lines) {
+	    var name = ['opacity', trail, ~~(alpha*100), i, lines].join('-')
+	      , start = 0.01 + i/lines * 100
+	      , z = Math.max(1 - (1-alpha) / trail * (100-start), alpha)
+	      , prefix = useCssAnimations.substring(0, useCssAnimations.indexOf('Animation')).toLowerCase()
+	      , pre = prefix && '-' + prefix + '-' || ''
+
+	    if (!animations[name]) {
+	      sheet.insertRule(
+	        '@' + pre + 'keyframes ' + name + '{' +
+	        '0%{opacity:' + z + '}' +
+	        start + '%{opacity:' + alpha + '}' +
+	        (start+0.01) + '%{opacity:1}' +
+	        (start+trail) % 100 + '%{opacity:' + alpha + '}' +
+	        '100%{opacity:' + z + '}' +
+	        '}', sheet.cssRules.length)
+
+	      animations[name] = 1
+	    }
+
+	    return name
+	  }
+
+	  /**
+	   * Tries various vendor prefixes and returns the first supported property.
+	   */
+	  function vendor(el, prop) {
+	    var s = el.style
+	      , pp
+	      , i
+
+	    prop = prop.charAt(0).toUpperCase() + prop.slice(1)
+	    for(i=0; i<prefixes.length; i++) {
+	      pp = prefixes[i]+prop
+	      if(s[pp] !== undefined) return pp
+	    }
+	    if(s[prop] !== undefined) return prop
+	  }
+
+	  /**
+	   * Sets multiple style properties at once.
+	   */
+	  function css(el, prop) {
+	    for (var n in prop)
+	      el.style[vendor(el, n)||n] = prop[n]
+
+	    return el
+	  }
+
+	  /**
+	   * Fills in default values.
+	   */
+	  function merge(obj) {
+	    for (var i=1; i < arguments.length; i++) {
+	      var def = arguments[i]
+	      for (var n in def)
+	        if (obj[n] === undefined) obj[n] = def[n]
+	    }
+	    return obj
+	  }
+
+	  /**
+	   * Returns the absolute page-offset of the given element.
+	   */
+	  function pos(el) {
+	    var o = { x:el.offsetLeft, y:el.offsetTop }
+	    while((el = el.offsetParent))
+	      o.x+=el.offsetLeft, o.y+=el.offsetTop
+
+	    return o
+	  }
+
+	  /**
+	   * Returns the line color from the given string or array.
+	   */
+	  function getColor(color, idx) {
+	    return typeof color == 'string' ? color : color[idx % color.length]
+	  }
+
+	  // Built-in defaults
+
+	  var defaults = {
+	    lines: 12,            // The number of lines to draw
+	    length: 7,            // The length of each line
+	    width: 5,             // The line thickness
+	    radius: 10,           // The radius of the inner circle
+	    rotate: 0,            // Rotation offset
+	    corners: 1,           // Roundness (0..1)
+	    color: '#000',        // #rgb or #rrggbb
+	    direction: 1,         // 1: clockwise, -1: counterclockwise
+	    speed: 1,             // Rounds per second
+	    trail: 100,           // Afterglow percentage
+	    opacity: 1/4,         // Opacity of the lines
+	    fps: 20,              // Frames per second when using setTimeout()
+	    zIndex: 2e9,          // Use a high z-index by default
+	    className: 'spinner', // CSS class to assign to the element
+	    top: '50%',           // center vertically
+	    left: '50%',          // center horizontally
+	    position: 'absolute'  // element position
+	  }
+
+	  /** The constructor */
+	  function Spinner(o) {
+	    this.opts = merge(o || {}, Spinner.defaults, defaults)
+	  }
+
+	  // Global defaults that override the built-ins:
+	  Spinner.defaults = {}
+
+	  merge(Spinner.prototype, {
+
+	    /**
+	     * Adds the spinner to the given target element. If this instance is already
+	     * spinning, it is automatically removed from its previous target b calling
+	     * stop() internally.
+	     */
+	    spin: function(target) {
+	      this.stop()
+
+	      var self = this
+	        , o = self.opts
+	        , el = self.el = css(createEl(0, {className: o.className}), {position: o.position, width: 0, zIndex: o.zIndex})
+	        , mid = o.radius+o.length+o.width
+
+	      css(el, {
+	        left: o.left,
+	        top: o.top
+	      })
+	        
+	      if (target) {
+	        target.insertBefore(el, target.firstChild||null)
+	      }
+
+	      el.setAttribute('role', 'progressbar')
+	      self.lines(el, self.opts)
+
+	      if (!useCssAnimations) {
+	        // No CSS animation support, use setTimeout() instead
+	        var i = 0
+	          , start = (o.lines - 1) * (1 - o.direction) / 2
+	          , alpha
+	          , fps = o.fps
+	          , f = fps/o.speed
+	          , ostep = (1-o.opacity) / (f*o.trail / 100)
+	          , astep = f/o.lines
+
+	        ;(function anim() {
+	          i++;
+	          for (var j = 0; j < o.lines; j++) {
+	            alpha = Math.max(1 - (i + (o.lines - j) * astep) % f * ostep, o.opacity)
+
+	            self.opacity(el, j * o.direction + start, alpha, o)
+	          }
+	          self.timeout = self.el && setTimeout(anim, ~~(1000/fps))
+	        })()
+	      }
+	      return self
+	    },
+
+	    /**
+	     * Stops and removes the Spinner.
+	     */
+	    stop: function() {
+	      var el = this.el
+	      if (el) {
+	        clearTimeout(this.timeout)
+	        if (el.parentNode) el.parentNode.removeChild(el)
+	        this.el = undefined
+	      }
+	      return this
+	    },
+
+	    /**
+	     * Internal method that draws the individual lines. Will be overwritten
+	     * in VML fallback mode below.
+	     */
+	    lines: function(el, o) {
+	      var i = 0
+	        , start = (o.lines - 1) * (1 - o.direction) / 2
+	        , seg
+
+	      function fill(color, shadow) {
+	        return css(createEl(), {
+	          position: 'absolute',
+	          width: (o.length+o.width) + 'px',
+	          height: o.width + 'px',
+	          background: color,
+	          boxShadow: shadow,
+	          transformOrigin: 'left',
+	          transform: 'rotate(' + ~~(360/o.lines*i+o.rotate) + 'deg) translate(' + o.radius+'px' +',0)',
+	          borderRadius: (o.corners * o.width>>1) + 'px'
+	        })
+	      }
+
+	      for (; i < o.lines; i++) {
+	        seg = css(createEl(), {
+	          position: 'absolute',
+	          top: 1+~(o.width/2) + 'px',
+	          transform: o.hwaccel ? 'translate3d(0,0,0)' : '',
+	          opacity: o.opacity,
+	          animation: useCssAnimations && addAnimation(o.opacity, o.trail, start + i * o.direction, o.lines) + ' ' + 1/o.speed + 's linear infinite'
+	        })
+
+	        if (o.shadow) ins(seg, css(fill('#000', '0 0 4px ' + '#000'), {top: 2+'px'}))
+	        ins(el, ins(seg, fill(getColor(o.color, i), '0 0 1px rgba(0,0,0,.1)')))
+	      }
+	      return el
+	    },
+
+	    /**
+	     * Internal method that adjusts the opacity of a single line.
+	     * Will be overwritten in VML fallback mode below.
+	     */
+	    opacity: function(el, i, val) {
+	      if (i < el.childNodes.length) el.childNodes[i].style.opacity = val
+	    }
+
+	  })
+
+
+	  function initVML() {
+
+	    /* Utility function to create a VML tag */
+	    function vml(tag, attr) {
+	      return createEl('<' + tag + ' xmlns="urn:schemas-microsoft.com:vml" class="spin-vml">', attr)
+	    }
+
+	    // No CSS transforms but VML support, add a CSS rule for VML elements:
+	    sheet.addRule('.spin-vml', 'behavior:url(#default#VML)')
+
+	    Spinner.prototype.lines = function(el, o) {
+	      var r = o.length+o.width
+	        , s = 2*r
+
+	      function grp() {
+	        return css(
+	          vml('group', {
+	            coordsize: s + ' ' + s,
+	            coordorigin: -r + ' ' + -r
+	          }),
+	          { width: s, height: s }
+	        )
+	      }
+
+	      var margin = -(o.width+o.length)*2 + 'px'
+	        , g = css(grp(), {position: 'absolute', top: margin, left: margin})
+	        , i
+
+	      function seg(i, dx, filter) {
+	        ins(g,
+	          ins(css(grp(), {rotation: 360 / o.lines * i + 'deg', left: ~~dx}),
+	            ins(css(vml('roundrect', {arcsize: o.corners}), {
+	                width: r,
+	                height: o.width,
+	                left: o.radius,
+	                top: -o.width>>1,
+	                filter: filter
+	              }),
+	              vml('fill', {color: getColor(o.color, i), opacity: o.opacity}),
+	              vml('stroke', {opacity: 0}) // transparent stroke to fix color bleeding upon opacity change
+	            )
+	          )
+	        )
+	      }
+
+	      if (o.shadow)
+	        for (i = 1; i <= o.lines; i++)
+	          seg(i, -2, 'progid:DXImageTransform.Microsoft.Blur(pixelradius=2,makeshadow=1,shadowopacity=.3)')
+
+	      for (i = 1; i <= o.lines; i++) seg(i)
+	      return ins(el, g)
+	    }
+
+	    Spinner.prototype.opacity = function(el, i, val, o) {
+	      var c = el.firstChild
+	      o = o.shadow && o.lines || 0
+	      if (c && i+o < c.childNodes.length) {
+	        c = c.childNodes[i+o]; c = c && c.firstChild; c = c && c.firstChild
+	        if (c) c.opacity = val
+	      }
+	    }
+	  }
+
+	  var probe = css(createEl('group'), {behavior: 'url(#default#VML)'})
+
+	  if (!vendor(probe, 'transform') && probe.adj) initVML()
+	  else useCssAnimations = vendor(probe, 'animation')
+
+	  return Spinner
+
+	}));
+	});
+
+	var Spinner = interopDefault(spin);
+
+	/** InfoBox Class */
+
+	var InfoBox = function () {
+	  function InfoBox() {
+	    classCallCheck(this, InfoBox);
+
+	    var me = this;
+	    var config = {
+	      defaultlabeltemplate: 'linkedlabel'
+	    };
+	    this.config = new Config$1.Config(config, 'config.yaml');
+	    console.log("Log", this.config.getConfig());
+	    this.handlebars = HandleBarsWrapper$1.HandleBarsWrapper(this.config);
+	    this.tooltips = new Tooltips$1.Tooltips();
+	    this.labelfetcher = new LabelFetcher$1.LabelFetcher(this.config.languages);
+	    this.labelfetcher.Monitor();
+	  }
+
+	  createClass(InfoBox, [{
+	    key: 'Populate',
+	    value: function Populate(Id, Q) {
+	      var template = arguments.length <= 2 || arguments[2] === undefined ? 'infobox' : arguments[2];
+	      var languages = arguments.length <= 3 || arguments[3] === undefined ? ['en'] : arguments[3];
+
+	      var simplifiedClaims, labels, entity;
+
+	      var boxelements = $(Id + '.wikidata').get();
+	      console.log("Find all items to fill in " + Id, boxelements);
+	      if (boxelements.length == 0) {
+	        return Promise.resolve([]);
+	      }
+	      $(Id + ' .wikidata-fetchlabel[data-wikidata]').addClass("wikidata-processing").removeClass("wikidata");
+
+	      if (typeof $(Id)[0].dataset !== 'undefined') {
+	        // If html data template is set, then that gets preference
+	        template = typeof $(Id)[0].dataset.wikidatatemplate !== 'undefined' ? $(Id)[0].dataset.wikidatatemplate : template;
+	        // If html data Q/wikidata is set, then that gets preference
+	        Q = typeof $(Id)[0].dataset.wikidata !== 'undefined' ? $(Id)[0].dataset.wikidata : Q;
+	      }
+
+	      // This has to go to config.yaml
+	      var opts = {
+	        lines: 13 // The number of lines to draw
+
+	        , length: 11 // The length of each line
+
+	        , width: 11 // The line thickness
+
+	        , radius: 2 // The radius of the inner circle
+
+	        , scale: 1 // Scales overall size of the spinner
+
+	        , corners: 1 // Corner roundness (0..1)
+
+	        , color: '#000' // #rgb or #rrggbb or array of colors
+
+	        , opacity: 0.25 // Opacity of the lines
+
+	        , rotate: 0 // The rotation offset
+
+	        , direction: 1 // 1: clockwise, -1: counterclockwise
+
+	        , speed: 1 // Rounds per second
+
+	        , trail: 60 // Afterglow percentage
+
+	        , fps: 20 // Frames per second when using setTimeout() as a fallback for CSS
+
+	        , zIndex: 2e9 // The z-index (defaults to 2000000000)
+
+	        , className: 'spinner' // The CSS class to assign to the spinner
+
+	        , top: '50%' // Top position relative to parent
+
+	        , left: '50%' // Left position relative to parent
+
+	        , shadow: false // Whether to render a shadow
+
+	        , hwaccel: false // Whether to use hardware acceleration
+
+	        , position: 'absolute' // Element positioning
+	      };
+	      //$(Id).width(100);
+	      var spinner = new Spinner(opts).spin($(Id)[0]);
+
+	      //  var url = wdk.getEntities(ids, languages, properties, format)
+	      var url = wdk.getEntities(Q, languages);
+	      var me = this;
+	      var result = new Promise(function (resolve, fail) {
+	        $.ajax({
+	          dataType: "jsonp",
+	          url: url
+	        }).done(function (data) {
+	          var entity = data.entities[Q];
+	          var entities = wdk.parse.wd.entities;
+	          //  var entities = wdk.parse.wd.entities(data);
+	          var simplifiedClaims = wdk.simplifyClaims(entity.claims);
+	          //  alert(entities);
+
+	          //  We also want the attributes / wikidata items Q codes here!
+	          //    The Q values are in the simplifiedClaims as values
+	          var properties = Object.keys(simplifiedClaims);
+	          var url2 = wdk.getEntities(properties, languages);
+
+	          $.ajax({
+	            dataType: "jsonp",
+	            url: url2
+	          }).done(function (labels) {
+
+	            document.title = entity.labels[Object.keys(entity.labels)[0]].value;
+	            var config = me.config.getConfig();
+	            var object = {
+	              entity: entity,
+	              labels: labels,
+	              languages: languages,
+	              config: config
+	            };
+	            me.handlebars.getTemplate(template).then(function (infobox) {
+	              console.log("fetched infoboxhbs", infobox);
+
+	              infobox(object).then(function (html) {
+	                console.log("fetched html");
+	                $(Id).append(html);
+	                me.handlebars.postProcess(Id);
+	                resolve();
+	                $(Id + '.wikidata-processing[data-wikidata]').addClass("wikidata-processed").removeClass("wikidata-processing");
+	              }).catch(function (err) {
+	                console.error("Error generating infobox template " + template, err);
+	              });
+	            });
+	          });
+	        }).catch(function (err) {
+	          fail(err);
+	        });
+	      });
+	      return result;
+	    }
+	  }, {
+	    key: 'Monitor',
+	    value: function Monitor() {
+	      var Id = arguments.length <= 0 || arguments[0] === undefined ? 'body' : arguments[0];
+
+	      var me = this;
+	      // configuration of the observer:
+	      var observerconfig = {
+	        attributes: false,
+	        childList: true,
+	        characterData: false
+	      };
+
+	      var labeltarget = $(Id)[0];
+
+	      // create an observer instance
+	      var labelobserver = new MutationObserver(function (mutations) {
+	        mutations.forEach(function (mutation) {
+	          console.log(mutation.type, mutation);
+	          if (mutation.addedNodes.length > 0) {
+	            var labels = [];
+	            var labelelements = $(Id + ' .wikidata').get();
+	            console.log("Find all items to fill in " + Id, labelelements);
+	            if (labelelements.length > 0) {
+
+	              for (var i = 0; i < labelelements.length; i++) {
+	                console.log(labelelements[i].dataset.wikidata);
+	                // No id, then you can not fill this element.
+	                // This also solves issues with jquery-toolbar that inserts the tooltip div
+	                // 4 more times without an Id.
+	                if (labelelements[i].id && labelelements[i].dataset.wikidata.length > 0) {
+	                  me.Populate("#" + labelelements[i].id, labelelements[i].dataset.wikidata);
+	                  //                labels.push(labelelements[i].dataset.wikidata);
+	                }
+	              }
+	            }
+	          }
+	        });
+	      });
+	      labelobserver.observe(labeltarget, observerconfig);
+
+	      // And after initializing the observer, process the element as it might already need to be populated
+	      var labels = [];
+	      var labelelements = $(Id + ' .wikidata').get();
+	      console.log("Find all items to translate in " + Id, labelelements);
+	      if (labelelements.length > 0) {
+
+	        for (var i = 0; i < labelelements.length; i++) {
+	          console.log(labelelements[i].dataset.wikidata);
+	          if (labelelements[i].dataset.wikidata.length > 0) {
+	            me.Populate("#" + labelelements[i].id, labelelements[i].dataset.wikidata);
+	            //                labels.push(labelelements[i].dataset.wikidata);
+	          }
+	        }
+	      }
+	    }
+	  }]);
+	  return InfoBox;
+	}();
 
 	exports.InfoBox = InfoBox;
-	exports.InfoBoxSPARQL = InfoBoxSPARQL;
-	exports.LabelFetcher = LabelFetcher;
 
 	Object.defineProperty(exports, '__esModule', { value: true });
 
 }));
+/* You really read all code until the end? Good for you because there is some more here. I can not believe it, but I want to initiate my library automagically and the only way I found you can do that, is by adding it here. And oh and behold, that works. so:*/   console.log("Do this");   var infobox = new Wikidata.InfoBox();   infobox.Monitor();     
+//# sourceMappingURL=Wikidata.Infobox.js.map

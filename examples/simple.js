@@ -6,11 +6,12 @@ var element = $("#infobox");
 $('#getentities').on("click", {
   element: element,
   Q: "Q50719",
+  template: 'Q3305213',
   langs: ['en', 'fr', 'nl']
 }, showInfobox);
 
 var fetcher = new Wikidata.LabelFetcher(['en', 'fr', 'nl']);
-fetcher.Monitor("infobox");
+fetcher.Monitor("#infobox");
 
 
 var box = new Wikidata.InfoBox();
@@ -18,7 +19,7 @@ var box = new Wikidata.InfoBox();
 
 function showInfobox(event) {
   var languages = event.data.langs;
-  html = box.Populate("infobox", event.data.Q, ['en', 'fr', 'nl'])
+  html = box.Populate("infobox", event.data.Q, event.data.template, ['en', 'fr', 'nl'])
     .then(function(html) {
       //event.data.element.html(html);
 
@@ -33,7 +34,7 @@ function showInfobox(event) {
 
 var Q = window.location.search.substr(1);
 if (Q.length > 0) {
-  box.Populate("infobox", Q, ['en', 'fr', 'nl']).then(function(html) {
+  box.Populate("infobox", Q, 'Q3305213').then(function(html) {
     //  element.html(html);
     //  var fetcher = new Wikidata.LabelFetcher();
     //  fetcher.Populate("infobox", ['en', 'fr', 'nl']);

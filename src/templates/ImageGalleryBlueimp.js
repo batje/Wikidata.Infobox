@@ -1,31 +1,18 @@
-/**
- * Copyright (c) 2016, Reinier Battenberg
- * All rights reserved.
- *
- * Source code can be found at:
- * https://github.com/batje/Wikidata.Infobox
- *
- * @license GPL 3.0
- * @module Util Classes
- */
 "use strict"
 
 var instance;
 /**
- * @class BlueImp Gallery class that loads all things necessary for a BlueImp gallery
+ * Class BlueImp Gallery class that loads all things necessary for a BlueImp gallery
  *
  */
-class ImageGalleryClass {
+class ImageGalleryBlueimpClass {
   constructor() {
     console.log("loading blueimp javascript");
     $.getScript(
       "../bower_components/blueimp-gallery/js/blueimp-gallery.js");
-    $.getScript(
-      "../bower_components/blueimp-gallery/js/blueimp-gallery-fullscreen.js");
-    $.getScript(
-      "../bower_components/blueimp-gallery/js/blueimp-gallery-indicator.js");
 
-    $.getScript("../bower_components/blueimp-gallery/js/jquery.blueimp-gallery.js");
+    // <!-- this only should happen once -->
+    // <!-- The Gallery as lightbox dialog, should be a child element of the document body -->
 
     $('body').append(
       '<div id="blueimp-gallery" class="blueimp-gallery blueimp-gallery-controls" ><div class="slides" ></div><h3 class="title"></h3><p class="description"></p><a class="prev">‹</a><a class="next">›</a><a class="close" >×</a><a class="play-pause"></a><ol class="indicator" ></ol></div>'
@@ -39,13 +26,16 @@ class ImageGalleryClass {
       })
       .attr('href', '../bower_components/blueimp-gallery/css/blueimp-gallery.css');
 
-
-    // <!-- this only should happen once -->
-    // <!-- The Gallery as lightbox dialog, should be a child element of the document body -->
     this.loader = new Promise(function(resolve, fail) {
       $.when(
         $.Deferred(function(deferred) {
           console.log("loaded blueimp javascript");
+          // These scripts *must* have blueimp loaded, else they will fail
+          $.getScript(
+            "../bower_components/blueimp-gallery/js/blueimp-gallery-fullscreen.js");
+          $.getScript(
+            "../bower_components/blueimp-gallery/js/blueimp-gallery-indicator.js");
+          $.getScript("../bower_components/blueimp-gallery/js/jquery.blueimp-gallery.js");
           $(deferred.resolve);
         })
       ).done(function() {
@@ -80,16 +70,16 @@ class ImageGalleryClass {
 }
 
 /**
- * @function ImageGallery
+ * @function ImageGalleryBlueimp
  * Factory function
  */
-function ImageGallery() {
+function ImageGalleryBlueimp() {
   if (typeof instance === 'undefined') {
-    instance = new ImageGalleryClass();
+    instance = new ImageGalleryBlueimpClass();
   }
   return instance;
 }
 
 export default {
-  ImageGallery
+  ImageGalleryBlueimp
 };

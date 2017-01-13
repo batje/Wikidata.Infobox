@@ -2,6 +2,10 @@
 
 var instance;
 
+
+/**
+ * Class TemplateFetcherClass
+ */
 class TemplateFetcherClass {
   constructor() {
     // empty
@@ -11,7 +15,7 @@ class TemplateFetcherClass {
     var me = this;
     if (typeof handlebar.templates[name] === 'undefined') {
       var result = new Promise(function(resolve, reject) {
-        $.ajax('templates/' + name + '.hbs')
+        $.ajax('./templates2/' + name + '.hbs')
           .done(function(data) {
             handlebar.templates[name] = handlebar.compile(data);
             console.log("Compiled template " + name);

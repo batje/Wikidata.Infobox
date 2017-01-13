@@ -1,14 +1,12 @@
  <div id="P18" class="P18 gallerydata">
 {{#each this}}
-<td>Picture {{this.mainsnak.datavalue.value}}
-  <a href="https://commons.wikimedia.org/w/thumb.php?width=200&f={{this.mainsnak.datavalue.value}}" title="{{this.mainsnak.datavalue.value}}" data-gallery="P18">
-  <img src="https://commons.wikimedia.org/w/thumb.php?width=100&f={{this.mainsnak.datavalue.value}}" title="{{this.mainsnak.datavalue.value}}">
+  <a href="https://commons.wikimedia.org/w/thumb.php?width={{@root.options.width}}&f={{this.mainsnak.datavalue.value}}" title="{{this.mainsnak.datavalue.value}}" data-gallery="P18">
+  <img src="https://commons.wikimedia.org/w/thumb.php?width={{@root.options.thumbwidth}}&f={{this.mainsnak.datavalue.value}}" title="{{this.mainsnak.datavalue.value}}">
   </a>
   {{#each this.references}}
      {{#each snaks}}
        <i>datatype: {{this.datatype}} value: {{this.datavalue.value.id}}</i>
     {{/each}}
   {{/each}}
-</td>
 {{/each}}
 </div>

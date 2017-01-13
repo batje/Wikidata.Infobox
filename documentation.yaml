@@ -1,0 +1,37 @@
+# This is the config for documentationjs @see https://github.com/documentationjs/documentation/blob/8ea9e834e5207b6071dc50a5877042af7cfd2a64/docs/CONFIG.md
+toc:
+  - InfoBox
+  - LabelFetcher
+  - ToolTips
+  - Config
+  - name: Wikidata BaseTypes
+    description: |
+      Classes that render Wikidata base types.
+  - TimeClass
+  - GlobeCoordinateClass
+  - Map
+  - name: Library Classes
+    description: Classes that load JavaScrip Libraries and manage dependencies.
+  - ImageGalleryBlueimpClass
+  - MapLeafletClass
+  - name: Wikidata Properties
+    description: |
+      Classes that render Wikidata properties.
+  - P18Class
+  - P373Class
+  - name: Util Classes
+    description: |
+      Stuff that is helpful
+  - LabelsClass
+  - Map
+  - WikiMediaImageClass
+  - TemplateBaseClass
+  - name: HandleBarsWrapper
+    description: |
+      A lot of complex code to manage handlebars and dynamically load templates.
+  - baseTypeTemplate
+  - dynamicPropertyTemplate
+  - HandleBarsWrapper
+  - HandleBarsWrapperClass
+  - JavaScriptFetcherClass
+  - TemplateFetcherClass

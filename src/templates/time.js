@@ -1,19 +1,10 @@
-/**
- * Copyright (c) 2016, Reinier Battenberg
- * All rights reserved.
- *
- * Source code can be found at:
- * https://github.com/batje/Wikidata.Infobox
- *
- * @license GPL 3.0
- * @module WikidataHelpers
- */
 "use strict"
 
 var instantiated = false;
 var instance;
 
-/** @class TimeClass helps rendering time datatype values
+/**
+ * Class TimeClass helps rendering time datatype values
  *
  */
 class TimeClass {
@@ -21,8 +12,9 @@ class TimeClass {
     console.log("loading time javascript");
   }
 
-  load(handlebars) {
+  load(handlebars, utilclass = "", variant = "") {
     console.log("Loading Time");
+    // @todo implement timelines
     return Promise.resolve();
   }
 
@@ -134,8 +126,6 @@ class TimeClass {
 
         datavalue.time = datavalue.time.substr(0, 1) + "00" + datavalue.time.substr(1);
       }
-
-      return Promise.resolve("Testing a bit, remove this line");
 
 
 

@@ -11,8 +11,14 @@ System.import(moduleSpecifier)
 })
 */
 
-
+/** Class HandleBarsWrapper */
 class HandleBarsWrapper {
+
+  /**
+   * Creates HandleBarsWrapper
+   *
+   * @return {HandleBarsWrapper}     HandleBarsWrapper instance
+   */
   constructor() {
       this.postProcessFunctions = [];
       this.modules = [];

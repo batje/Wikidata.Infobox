@@ -34,7 +34,7 @@
           {{/with}}
       </td>
       <td>
-        {{ dynamicPropertyTemplate @key this.[0].mainsnak.datatype this "jopie" }}
+        {{ dynamicPropertyTemplate @key this.[0].mainsnak.datatype this }}
       </td>
       {{#> myPartial }}
         <td class="defaultlabel">default value: {{ this.[0].mainsnak.datavalue.value.[0] }}</td>

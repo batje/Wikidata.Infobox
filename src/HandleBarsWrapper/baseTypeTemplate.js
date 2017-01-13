@@ -1,6 +1,15 @@
 import HandleBarsWrapper from './HandleBarsWrapper.js';
 
-function baseTypeTemplate(template, context, opts) {
+
+/**
+ * baseTypeTemplate - description
+ *
+ * @param  {type} template description
+ * @param  {type} context  description 
+ * @param  {type} config   description
+ * @return {type}          description
+ */
+function baseTypeTemplate(template, context, config) {
 
   if (template != 'time') {
     //    return Promise.resolve("niks");

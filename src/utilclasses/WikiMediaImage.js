@@ -1,20 +1,10 @@
-/**
- * Copyright (c) 2016, Reinier Battenberg
- * All rights reserved.
- *
- * Source code can be found at:
- * https://github.com/batje/Wikidata.Infobox
- *
- * @license GPL 3.0
- * @module Util Classes
- */
-
 "use strict"
 var instance;
 
-/* @class
- * Class renders Wikimedia Images including all their metadata
- * Am still not exactly sure if and how to make this extending @class TemplateBaseClass
+/**
+ * Class WikiMediaImageClass
+ * Renders Wikimedia Images including all their metadata
+ * Am still not exactly sure if and how to make this extending {@link TemplateBaseClass}
  * For now it is on its own.
  */
 class WikiMediaImageClass {
@@ -30,9 +20,7 @@ class WikiMediaImageClass {
    * @returns Promise that resolves to the HTML for the image
    */
   render(filename, template = 'Image', gallery = false) {
-      console.log("This Image Handlebars", this.handlebars);
       var me = this;
-      //      console.log("Image Handlebars", me.handlebars);
       var image;
       return new Promise(function(resolve, reject) {
         var url =
@@ -59,7 +47,6 @@ class WikiMediaImageClass {
                 .then(function(hbtemplate) {
                   Promise.resolve(hbtemplate(image))
                     .then(function(html) {
-                      console.log("Compiled result " + html);
                       resolve(html);
                     })
                     .catch(function(e) {
@@ -67,7 +54,7 @@ class WikiMediaImageClass {
                     })
                 })
                 .catch(function(e) {
-                  console.error("Can not find Image template");
+                  console.error("Can not find Image template", e);
                 });
             })
             .catch(function(e) {

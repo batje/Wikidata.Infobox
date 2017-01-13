@@ -1,288 +1,3616 @@
-<!DOCTYPE html>
-
-<html lang="en">
+<!doctype html>
+<html>
 <head>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width">
-	<title>TOM - The Other Maps Index</title>
-
-	<!--[if lt IE 9]>
-	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-	<![endif]-->
-	<link type="text/css" rel="stylesheet" href="styles/sunlight.dark.css">
-
-	<link type="text/css" rel="stylesheet" href="styles/site.paper.css">
-
+  <meta charset='utf-8' />
+  <title>Wikidata.Infobox  | Documentation</title>
+  <meta name='viewport' content='width=device-width,initial-scale=1'>
+  <link href='assets/bass.css' type='text/css' rel='stylesheet' />
+  <link href='assets/style.css' type='text/css' rel='stylesheet' />
+  <link href='assets/github.css' type='text/css' rel='stylesheet' />
 </head>
-
-<body>
-
-<div class="navbar navbar-default navbar-fixed-top navbar-inverse">
-<div class="container">
-	<div class="navbar-header">
-		<a class="navbar-brand" href="index.html">TOM - The Other Maps</a>
-		<button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#topNavigation">
-			<span class="icon-bar"></span>
-			<span class="icon-bar"></span>
-			<span class="icon-bar"></span>
-        </button>
-	</div>
-	<div class="navbar-collapse collapse" id="topNavigation">
-		<ul class="nav navbar-nav">
-			
-			<li class="dropdown">
-				<a href="modules.list.html" class="dropdown-toggle" data-toggle="dropdown">Modules<b class="caret"></b></a>
-				<ul class="dropdown-menu ">
-					<li><a href="module-Util%2525252525252520Classes.html">Util Classes</a></li><li><a href="module-WikidataHelpers.html">WikidataHelpers</a></li>
-				</ul>
-			</li>
-			
-			<li class="dropdown">
-				<a href="classes.list.html" class="dropdown-toggle" data-toggle="dropdown">Classes<b class="caret"></b></a>
-				<ul class="dropdown-menu ">
-					<li><a href="module-WikidataHelpers-GlobeCoordinateClass.html">WikidataHelpers~GlobeCoordinateClass</a></li><li><a href="HandleBarsWrapperClass.html">HandleBarsWrapperClass</a></li><li><a href="InfoBox.html">InfoBox</a></li><li><a href="InfoBoxSPARQL.html">InfoBoxSPARQL</a></li><li><a href="LabelFetcher.html">LabelFetcher</a></li><li><a href="Tooltips.html">Tooltips</a></li><li><a href="module-Util%2520Classes-ImageGalleryBlueimpClass.html">Util Classes~ImageGalleryBlueimpClass</a></li><li><a href="module-Util%2520Classes-MapLeafletClass.html">Util Classes~MapLeafletClass</a></li><li><a href="module-WikidataHelpers-TimeClass.html">WikidataHelpers~TimeClass</a></li><li><a href="module-Util%2520Classes-Config.html">Util Classes~Config</a></li><li><a href="module-Util%2520Classes-LabelsClass.html">Util Classes~LabelsClass</a></li><li><a href="module-Util%2520Classes-Map.html">Util Classes~Map</a></li><li><a href="module-Util%2520Classes-TemplateBaseClass.html">Util Classes~TemplateBaseClass</a></li>
-				</ul>
-			</li>
-			
-			<li class="dropdown">
-				<a href="global.html" class="dropdown-toggle" data-toggle="dropdown">Global<b class="caret"></b></a>
-				<ul class="dropdown-menu ">
-					<li><a href="global.html#escapeHandleBarshelperthatescapestextthatneedsescapinglikeHTML">escape HandleBars helper that escapes text that needs escaping like HTML</a></li><li><a href="global.html#encodehelperthatencodeshtmlsuchashtmlreturnedbyimageAPI">encode helper that encodes html (such as html returned by imageAPI)</a></li><li><a href="global.html#decodehelperthatdecodesencodedhtmlsuchashtmlreturnedbyimageAPI">decode helper that decodes encoded html (such as html returned by imageAPI)</a></li><li><a href="global.html#safestringHandleBarshelperthatmarksavalueasasafestring">safestring HandleBars helper that marks a value as a safestring</a></li>
-				</ul>
-			</li>
-			
-		</ul>
-        
-            <div class="col-sm-3 col-md-3">
-                <form class="navbar-form" role="search">
-                    <div class="input-group">
-                        <input type="text" class="form-control" placeholder="Search" name="q" id="search-input">
-                        <div class="input-group-btn">
-                            <button class="btn btn-default" id="search-submit"><i class="glyphicon glyphicon-search"></i></button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        
-	</div>
-
-</div>
-</div>
-
-
-<div class="container" id="toc-content">
-<div class="row">
-
-	
-	<div class="col-md-8">
-	
-		<div id="main">
-			
-
-	
-	
-
-
-
-
-
-
-
-
-
-
-
-	
-	
-
-
-
-
-
-    <section class="readme-section">
-        <article><h1>Wikidata.Infobox</h1><p><a href="https://ci.testling.com/spatialserver/Leaflet.MapboxVectorTile"><img src="https://ci.testling.com/spatialserver/Leaflet.MapboxVectorTile.png" alt="browser support">
-</a></p>
-<p>A library to create templatable html embeds, hovers and popup boxes based on Wikidata entries</p>
-<h2>Getting Started</h2><p>Install the dependencies:</p>
-<pre class="prettyprint source lang-sh"><code>npm install</code></pre><p>Dynamically compile and serve:</p>
-<pre class="prettyprint source lang-sh"><code>npm start</code></pre><p>This puts a watcher on your source directory and recompiles with browserify automatically. It also serves the project directory on port 3000.</p>
-<p>Open your browser to <code>http://localhost:3000/examples</code> and see the plugin in action!</p>
-<h2>Usage</h2></article>
-    </section>
-
-
-
-
-
-
-
-		</div>
-	</div>
-
-	<div class="clearfix"></div>
-
-	
-		<div class="col-md-3">
-			<div id="toc" class="col-md-3 hidden-xs hidden-sm hidden-md"></div>
-		</div>
-	
-
-</div>
-</div>
-
-
-    <div class="modal fade" id="searchResults">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-            <h4 class="modal-title">Search results</h4>
+<body class='documentation'>
+  <div class='max-width-4 mx-auto'>
+    <div class='clearfix md-mxn2'>
+      <div class='fixed xs-hide fix-3 overflow-auto max-height-100'>
+        <div class='py1 px2'>
+          <h3 class='mb0 no-anchor'>Wikidata.Infobox</h3>
+          <div class='mb1'><code></code></div>
+          <input
+            placeholder='Filter'
+            id='filter-input'
+            class='col12 block input'
+            type='text' />
+          <div id='toc'>
+            <ul class='list-reset h5 py1-ul'>
+              
+                
+                <li><a
+                  href='#undefined'
+                  class="">
+                  
+                  
+                </a>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#undefined'
+                  class="">
+                  
+                  
+                </a>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#undefined'
+                  class="">
+                  
+                  
+                </a>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#undefined'
+                  class="">
+                  
+                  
+                </a>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#undefined'
+                  class="">
+                  
+                  
+                </a>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#map'
+                  class=" toggle-sibling">
+                  Map
+                  <span class='icon'>▸</span>
+                </a>
+                
+                <div class='toggle-target display-none'>
+                  
+                  
+                    <ul class='list-reset py1-ul pl1'>
+                      <li class='h5'><span>Instance members</span></li>
+                      
+                      <li><a
+                        href='#Map#addKML'
+                        class='regular pre-open'>
+                        #addKML
+                      </a></li>
+                      
+                    </ul>
+                  
+                  
+                </div>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#map'
+                  class=" toggle-sibling">
+                  Map
+                  <span class='icon'>▸</span>
+                </a>
+                
+                <div class='toggle-target display-none'>
+                  
+                  
+                    <ul class='list-reset py1-ul pl1'>
+                      <li class='h5'><span>Instance members</span></li>
+                      
+                      <li><a
+                        href='#Map#addKML'
+                        class='regular pre-open'>
+                        #addKML
+                      </a></li>
+                      
+                    </ul>
+                  
+                  
+                </div>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#undefined'
+                  class="">
+                  
+                  
+                </a>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#undefined'
+                  class="">
+                  
+                  
+                </a>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#wikidatahelpers'
+                  class="">
+                  WikidataHelpers
+                  
+                </a>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#wikidatahelpers'
+                  class="">
+                  WikidataHelpers
+                  
+                </a>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#wikidatahelpers'
+                  class="">
+                  WikidataHelpers
+                  
+                </a>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#wikidatahelpers'
+                  class="">
+                  WikidataHelpers
+                  
+                </a>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#javascriptfetcher'
+                  class="">
+                  JavaScriptFetcher
+                  
+                </a>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#undefined'
+                  class="">
+                  
+                  
+                </a>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#undefined'
+                  class="">
+                  
+                  
+                </a>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#undefined'
+                  class="">
+                  
+                  
+                </a>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#infoboxsparql'
+                  class="">
+                  InfoBoxSPARQL
+                  
+                </a>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#infobox'
+                  class="">
+                  InfoBox
+                  
+                </a>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#infobox'
+                  class="">
+                  InfoBox
+                  
+                </a>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#infobox'
+                  class="">
+                  InfoBox
+                  
+                </a>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#tooltips'
+                  class="">
+                  Tooltips
+                  
+                </a>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#labelfetcher'
+                  class="">
+                  LabelFetcher
+                  
+                </a>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#imagegalleryblueimpclass'
+                  class="">
+                  ImageGalleryBlueimpClass
+                  
+                </a>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#labelsclass'
+                  class=" toggle-sibling">
+                  LabelsClass
+                  <span class='icon'>▸</span>
+                </a>
+                
+                <div class='toggle-target display-none'>
+                  
+                  
+                    <ul class='list-reset py1-ul pl1'>
+                      <li class='h5'><span>Instance members</span></li>
+                      
+                      <li><a
+                        href='#LabelsClass#renderhelper'
+                        class='regular pre-open'>
+                        #renderhelper
+                      </a></li>
+                      
+                      <li><a
+                        href='#LabelsClass#render'
+                        class='regular pre-open'>
+                        #render
+                      </a></li>
+                      
+                    </ul>
+                  
+                  
+                </div>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#timeclass'
+                  class=" toggle-sibling">
+                  TimeClass
+                  <span class='icon'>▸</span>
+                </a>
+                
+                <div class='toggle-target display-none'>
+                  
+                  
+                    <ul class='list-reset py1-ul pl1'>
+                      <li class='h5'><span>Instance members</span></li>
+                      
+                      <li><a
+                        href='#TimeClass#HelperTimeAsText'
+                        class='regular pre-open'>
+                        #HelperTimeAsText
+                      </a></li>
+                      
+                      <li><a
+                        href='#TimeClass#dateToJulianNumber0'
+                        class='regular pre-open'>
+                        #dateToJulianNumber0
+                      </a></li>
+                      
+                      <li><a
+                        href='#TimeClass#julianIntToDate0'
+                        class='regular pre-open'>
+                        #julianIntToDate0
+                      </a></li>
+                      
+                    </ul>
+                  
+                  
+                </div>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#globecoordinateclass'
+                  class=" toggle-sibling">
+                  GlobeCoordinateClass
+                  <span class='icon'>▸</span>
+                </a>
+                
+                <div class='toggle-target display-none'>
+                  
+                  
+                    <ul class='list-reset py1-ul pl1'>
+                      <li class='h5'><span>Instance members</span></li>
+                      
+                      <li><a
+                        href='#GlobeCoordinateClass#PlotPoint'
+                        class='regular pre-open'>
+                        #PlotPoint
+                      </a></li>
+                      
+                    </ul>
+                  
+                  
+                </div>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#mapleafletclass'
+                  class="">
+                  MapLeafletClass
+                  
+                </a>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#templatebaseclass'
+                  class=" toggle-sibling">
+                  TemplateBaseClass
+                  <span class='icon'>▸</span>
+                </a>
+                
+                <div class='toggle-target display-none'>
+                  
+                  
+                    <ul class='list-reset py1-ul pl1'>
+                      <li class='h5'><span>Instance members</span></li>
+                      
+                      <li><a
+                        href='#TemplateBaseClass#load'
+                        class='regular pre-open'>
+                        #load
+                      </a></li>
+                      
+                    </ul>
+                  
+                  
+                </div>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#config'
+                  class="">
+                  Config
+                  
+                </a>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#render'
+                  class="">
+                  render
+                  
+                </a>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#handlebarswrapperclass'
+                  class=" toggle-sibling">
+                  HandleBarsWrapperClass
+                  <span class='icon'>▸</span>
+                </a>
+                
+                <div class='toggle-target display-none'>
+                  
+                  
+                    <ul class='list-reset py1-ul pl1'>
+                      <li class='h5'><span>Instance members</span></li>
+                      
+                      <li><a
+                        href='#HandleBarsWrapperClass#safestring'
+                        class='regular pre-open'>
+                        #safestring
+                      </a></li>
+                      
+                      <li><a
+                        href='#HandleBarsWrapperClass#encodeURIComponent'
+                        class='regular pre-open'>
+                        #encodeURIComponent
+                      </a></li>
+                      
+                      <li><a
+                        href='#HandleBarsWrapperClass#escape'
+                        class='regular pre-open'>
+                        #escape
+                      </a></li>
+                      
+                      <li><a
+                        href='#HandleBarsWrapperClass#encode'
+                        class='regular pre-open'>
+                        #encode
+                      </a></li>
+                      
+                      <li><a
+                        href='#HandleBarsWrapperClass#stripHTML'
+                        class='regular pre-open'>
+                        #stripHTML
+                      </a></li>
+                      
+                      <li><a
+                        href='#HandleBarsWrapperClass#stripHTML'
+                        class='regular pre-open'>
+                        #stripHTML
+                      </a></li>
+                      
+                      <li><a
+                        href='#HandleBarsWrapperClass#getTemplate'
+                        class='regular pre-open'>
+                        #getTemplate
+                      </a></li>
+                      
+                    </ul>
+                  
+                  
+                </div>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#insertimageshelper'
+                  class="">
+                  InsertImagesHelper
+                  
+                </a>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#insertimages'
+                  class="">
+                  InsertImages
+                  
+                </a>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#imagegalleryblueimp'
+                  class="">
+                  ImageGalleryBlueimp
+                  
+                </a>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#mapleaflet'
+                  class="">
+                  MapLeaflet
+                  
+                </a>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#labels'
+                  class="">
+                  Labels
+                  
+                </a>
+                
+                </li>
+              
+            </ul>
           </div>
-          <div class="modal-body"></div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          <div class='mt1 h6 quiet'>
+            <a href='http://documentation.js.org/reading-documentation.html'>Need help reading this?</a>
           </div>
-        </div><!-- /.modal-content -->
-      </div><!-- /.modal-dialog -->
+        </div>
+      </div>
+      <div class='fix-margin-3'>
+        
+          
+            <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='undefined'>
+      
+    </h3>
+    
+    
+  </div>
+  
+
+  <p>Copyright (c) 2016, Reinier Battenberg
+All rights reserved.</p>
+<p>Source code can be found at:
+<a href="https://github.com/batje/Wikidata.Infobox">https://github.com/batje/Wikidata.Infobox</a></p>
+
+
+  <div class='pre p1 fill-light mt0'></div>
+  
+  
+
+  
+  <div>License: GPL 3.0</div>
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+            <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='undefined'>
+      
+    </h3>
+    
+    
+  </div>
+  
+
+  <p>Copyright (c) 2016, Reinier Battenberg
+All rights reserved.</p>
+<p>Source code can be found at:
+<a href="https://github.com/batje/Wikidata.Infobox">https://github.com/batje/Wikidata.Infobox</a></p>
+
+
+  <div class='pre p1 fill-light mt0'></div>
+  
+  
+
+  
+  <div>License: ISC</div>
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+            <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='undefined'>
+      
+    </h3>
+    
+    
+  </div>
+  
+
+  <p>Copyright (c) 2016, Reinier Battenberg
+All rights reserved.</p>
+<p>Source code can be found at:
+<a href="https://github.com/batje/Wikidata.Infobox">https://github.com/batje/Wikidata.Infobox</a></p>
+
+
+  <div class='pre p1 fill-light mt0'></div>
+  
+  
+
+  
+  <div>License: ISC</div>
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+            <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='undefined'>
+      
+    </h3>
+    
+    
+  </div>
+  
+
+  <p>Copyright (c) 2016, Reinier Battenberg
+All rights reserved.</p>
+<p>Source code can be found at:
+<a href="https://github.com/batje/Wikidata.Infobox">https://github.com/batje/Wikidata.Infobox</a></p>
+
+
+  <div class='pre p1 fill-light mt0'></div>
+  
+  
+
+  
+  <div>License: ISC</div>
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+            <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='undefined'>
+      
+    </h3>
+    
+    
+  </div>
+  
+
+  <p>Copyright (c) 2016, Reinier Battenberg
+All rights reserved.</p>
+<p>Source code can be found at:
+<a href="https://github.com/batje/Wikidata.Infobox">https://github.com/batje/Wikidata.Infobox</a></p>
+
+
+  <div class='pre p1 fill-light mt0'></div>
+  
+  
+
+  
+  <div>License: ISC</div>
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+            <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='map'>
+      Map
+    </h3>
+    
+    
+  </div>
+  
+
+  <p>Copyright (c) 2016, Reinier Battenberg
+All rights reserved.</p>
+<p>Source code can be found at:
+<a href="https://github.com/batje/Wikidata.Infobox">https://github.com/batje/Wikidata.Infobox</a></p>
+
+
+  <div class='pre p1 fill-light mt0'>Map</div>
+  
+  
+
+  
+  <div>License: GPL 3.0</div>
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Instance Members</div>
+    <div class="clearfix">
+  
+    <div class='border-bottom' id='Map#addKML'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>addKML(kml)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  
+
+  <div class='pre p1 fill-light mt0'>addKML(kml: any)</div>
+  
+  
+
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>kml</span> <code class='quiet'>(any)</code>
+	    raw KML data
+
+          </div>
+          
+        </div>
+      
     </div>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+</div>
+
+  
+
+  
+</section>
+
+          
+        
+          
+            <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='map'>
+      Map
+    </h3>
+    
+    
+  </div>
+  
+
+  
+
+  <div class='pre p1 fill-light mt0'>new Map()</div>
+  
+  
+
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Instance Members</div>
+    <div class="clearfix">
+  
+    <div class='border-bottom' id='Map#addKML'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>addKML(kml)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  
+
+  <div class='pre p1 fill-light mt0'>addKML(kml: any)</div>
+  
+  
+
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>kml</span> <code class='quiet'>(any)</code>
+	    raw KML data
+
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+</div>
+
+  
+
+  
+</section>
+
+          
+        
+          
+            <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='undefined'>
+      
+    </h3>
+    
+    
+  </div>
+  
+
+  <p>Copyright (c) 2016, Reinier Battenberg
+All rights reserved.</p>
+<p>Source code can be found at:
+<a href="https://github.com/batje/Wikidata.Infobox">https://github.com/batje/Wikidata.Infobox</a></p>
 
 
-<footer>
+  <div class='pre p1 fill-light mt0'></div>
+  
+  
 
-	Build by Reinier for various reasons
+  
+  <div>License: GPL 3.0</div>
+  
+  
+  
 
+  
 
-	<span class="copyright">
-	© Reinier Battenberg
-	</span>
+  
 
-<span class="jsdoc-message">
-	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a>
-	
-		on Friday, December 23rd 2016, 3:16:24 pm
-	
-	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
-</span>
-</footer>
+  
 
-<script src="scripts/docstrap.lib.js"></script>
-<script src="scripts/toc.js"></script>
+  
 
-    <script type="text/javascript" src="scripts/fulltext-search-ui.js"></script>
+  
 
+  
 
-<script>
-$( function () {
-	$( "[id*='$']" ).each( function () {
-		var $this = $( this );
+  
 
-		$this.attr( "id", $this.attr( "id" ).replace( "$", "__" ) );
-	} );
+  
+</section>
 
-	$( ".tutorial-section pre, .readme-section pre, pre.prettyprint.source" ).each( function () {
-		var $this = $( this );
+          
+        
+          
+            <section class='p2 mb2 clearfix bg-white minishadow'>
 
-		var example = $this.find( "code" );
-		exampleText = example.html();
-		var lang = /{@lang (.*?)}/.exec( exampleText );
-		if ( lang && lang[1] ) {
-			exampleText = exampleText.replace( lang[0], "" );
-			example.html( exampleText );
-			lang = lang[1];
-		} else {
-			var langClassMatch = example.parent()[0].className.match(/lang\-(\S+)/);
-			lang = langClassMatch ? langClassMatch[1] : "javascript";
-		}
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='undefined'>
+      
+    </h3>
+    
+    
+  </div>
+  
 
-		if ( lang ) {
-
-			$this
-			.addClass( "sunlight-highlight-" + lang )
-			.addClass( "linenums" )
-			.html( example.html() );
-
-		}
-	} );
-
-	Sunlight.highlightAll( {
-		lineNumbers : true,
-		showMenu : true,
-		enableDoclinks : true
-	} );
-
-	$.catchAnchorLinks( {
-        navbarOffset: 10
-	} );
-	$( "#toc" ).toc( {
-		anchorName  : function ( i, heading, prefix ) {
-			return $( heading ).attr( "id" ) || ( prefix + i );
-		},
-		selectors   : "#toc-content h1,#toc-content h2,#toc-content h3,#toc-content h4",
-		showAndHide : false,
-		smoothScrolling: true
-	} );
-
-	$( "#main span[id^='toc']" ).addClass( "toc-shim" );
-	$( '.dropdown-toggle' ).dropdown();
-
-    $( "table" ).each( function () {
-      var $this = $( this );
-      $this.addClass('table');
-    } );
-
-} );
-</script>
+  <p>Copyright (c) 2016, Reinier Battenberg
+All rights reserved.</p>
+<p>Source code can be found at:
+<a href="https://github.com/batje/Wikidata.Infobox">https://github.com/batje/Wikidata.Infobox</a></p>
 
 
+  <div class='pre p1 fill-light mt0'></div>
+  
+  
 
-<!--Navigation and Symbol Display-->
+  
+  <div>License: GPL 3.0</div>
+  
+  
+  
 
-<script>
-	$( function () {
-		$( '#main' ).localScroll( {
-			offset : { top : 60 } //offset by the height of your header (give or take a few px, see what works for you)
-		} );
-		$( "dt.name" ).each( function () {
-			var $this = $( this ).find("h4");
-			var icon = $( "<i/>" ).addClass( "icon-plus-sign" ).addClass( "pull-right" ).addClass( "icon-white" );
-			var dt = $(this);
-			var children = dt.next( "dd" );
+  
 
-			dt.prepend( icon ).css( {cursor : "pointer"} );
-			dt.addClass( "member-collapsed" ).addClass( "member" );
+  
 
+  
 
-			children.hide();
+  
 
-			dt.children().on( "click", function () {
-				children = dt.next( "dd" );
-				children.slideToggle( "fast", function () {
+  
 
-					if ( children.is( ":visible" ) ) {
-						icon.addClass( "icon-minus-sign" ).removeClass( "icon-plus-sign" ).removeClass( "icon-white" );
-						dt.addClass( "member-open" ).animate( "member-collapsed" );
-					} else {
-						icon.addClass( "icon-plus-sign" ).removeClass( "icon-minus-sign" ).addClass( "icon-white" );
-						dt.addClass( "member-collapsed" ).removeClass( "member-open" );
-					}
-				} );
-			} );
+  
 
-		} );
-	} );
-</script>
+  
 
+  
+</section>
 
-<!--Google Analytics-->
+          
+        
+          
+            <section class='p2 mb2 clearfix bg-white minishadow'>
 
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='wikidatahelpers'>
+      WikidataHelpers
+    </h3>
+    
+    
+  </div>
+  
 
-
-    <script type="text/javascript">
-        $(document).ready(function() {
-            SearcherDisplay.init();
-        });
-    </script>
+  <p>Copyright (c) 2016, Reinier Battenberg
+All rights reserved.</p>
+<p>Source code can be found at:
+<a href="https://github.com/batje/Wikidata.Infobox">https://github.com/batje/Wikidata.Infobox</a></p>
 
 
+  <div class='pre p1 fill-light mt0'>WikidataHelpers</div>
+  
+  
+
+  
+  <div>License: GPL 3.0</div>
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+            <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='wikidatahelpers'>
+      WikidataHelpers
+    </h3>
+    
+    
+  </div>
+  
+
+  <p>Copyright (c) 2016, Reinier Battenberg
+All rights reserved.</p>
+<p>Source code can be found at:
+<a href="https://github.com/batje/Wikidata.Infobox">https://github.com/batje/Wikidata.Infobox</a></p>
+
+
+  <div class='pre p1 fill-light mt0'>WikidataHelpers</div>
+  
+  
+
+  
+  <div>License: GPL 3.0</div>
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+            <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='wikidatahelpers'>
+      WikidataHelpers
+    </h3>
+    
+    
+  </div>
+  
+
+  <p>Copyright (c) 2016, Reinier Battenberg
+All rights reserved.</p>
+<p>Source code can be found at:
+<a href="https://github.com/batje/Wikidata.Infobox">https://github.com/batje/Wikidata.Infobox</a></p>
+
+
+  <div class='pre p1 fill-light mt0'>WikidataHelpers</div>
+  
+  
+
+  
+  <div>License: GPL 3.0</div>
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+            <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='wikidatahelpers'>
+      WikidataHelpers
+    </h3>
+    
+    
+  </div>
+  
+
+  <p>Copyright (c) 2016, Reinier Battenberg
+All rights reserved.</p>
+<p>Source code can be found at:
+<a href="https://github.com/batje/Wikidata.Infobox">https://github.com/batje/Wikidata.Infobox</a></p>
+
+
+  <div class='pre p1 fill-light mt0'>WikidataHelpers</div>
+  
+  
+
+  
+  <div>License: GPL 3.0</div>
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+            <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='javascriptfetcher'>
+      JavaScriptFetcher
+    </h3>
+    
+    
+  </div>
+  
+
+  <p>Copyright (c) 2016, Reinier Battenberg
+All rights reserved.</p>
+<p>Source code can be found at:
+<a href="https://github.com/batje/Wikidata.Infobox">https://github.com/batje/Wikidata.Infobox</a></p>
+
+
+  <div class='pre p1 fill-light mt0'>JavaScriptFetcher</div>
+  
+  
+
+  
+  <div>License: GPL 3.0</div>
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+            <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='undefined'>
+      
+    </h3>
+    
+    
+  </div>
+  
+
+  <p>Copyright (c) 2016, Reinier Battenberg
+All rights reserved.</p>
+<p>Source code can be found at:
+<a href="https://github.com/batje/Wikidata.Infobox">https://github.com/batje/Wikidata.Infobox</a></p>
+
+
+  <div class='pre p1 fill-light mt0'></div>
+  
+  
+
+  
+  <div>License: GPL 3.0</div>
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+            <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='undefined'>
+      
+    </h3>
+    
+    
+  </div>
+  
+
+  <p>Copyright (c) 2016, Reinier Battenberg
+All rights reserved.</p>
+<p>Source code can be found at:
+<a href="https://github.com/batje/Wikidata.Infobox">https://github.com/batje/Wikidata.Infobox</a></p>
+
+
+  <div class='pre p1 fill-light mt0'></div>
+  
+  
+
+  
+  <div>License: GPL 3.0</div>
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+            <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='undefined'>
+      
+    </h3>
+    
+    
+  </div>
+  
+
+  <p>Copyright (c) 2016, Reinier Battenberg
+All rights reserved.</p>
+<p>Source code can be found at:
+<a href="https://github.com/batje/Wikidata.Infobox">https://github.com/batje/Wikidata.Infobox</a></p>
+
+
+  <div class='pre p1 fill-light mt0'></div>
+  
+  
+
+  
+  <div>License: GPL 3.0</div>
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+            <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='infoboxsparql'>
+      InfoBoxSPARQL
+    </h3>
+    
+    
+  </div>
+  
+
+  <p>InfoBox Class</p>
+
+
+  <div class='pre p1 fill-light mt0'>new InfoBoxSPARQL()</div>
+  
+  
+
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+            <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='infobox'>
+      InfoBox
+    </h3>
+    
+    
+  </div>
+  
+
+  <p>This is the main export of our InfoBox.</p>
+
+
+  <div class='pre p1 fill-light mt0'>InfoBox</div>
+  
+  
+
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+            <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='infobox'>
+      InfoBox
+    </h3>
+    
+    
+  </div>
+  
+
+  <p>Copyright (c) 2016, Reinier Battenberg
+All rights reserved.</p>
+<p>Source code can be found at:
+<a href="https://github.com/batje/Wikidata.Infobox">https://github.com/batje/Wikidata.Infobox</a></p>
+
+
+  <div class='pre p1 fill-light mt0'>InfoBox</div>
+  
+  
+
+  
+  <div>License: GPL 3.0</div>
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+            <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='infobox'>
+      InfoBox
+    </h3>
+    
+    
+  </div>
+  
+
+  <p>InfoBox Class</p>
+
+
+  <div class='pre p1 fill-light mt0'>new InfoBox()</div>
+  
+  
+
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+            <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='tooltips'>
+      Tooltips
+    </h3>
+    
+    
+  </div>
+  
+
+  <p>Tooltips Class</p>
+
+
+  <div class='pre p1 fill-light mt0'>new Tooltips()</div>
+  
+  
+
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+            <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='labelfetcher'>
+      LabelFetcher
+    </h3>
+    
+    
+  </div>
+  
+
+  <p>LabelFetcher Class
+Static class that monitors the dome for labels that need to be translated</p>
+
+
+  <div class='pre p1 fill-light mt0'>new LabelFetcher()</div>
+  
+  
+
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+            <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='imagegalleryblueimpclass'>
+      ImageGalleryBlueimpClass
+    </h3>
+    
+    
+  </div>
+  
+
+  
+
+  <div class='pre p1 fill-light mt0'>new ImageGalleryBlueimpClass()</div>
+  
+  
+
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+            <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='labelsclass'>
+      LabelsClass
+    </h3>
+    
+    
+  </div>
+  
+
+  
+
+  <div class='pre p1 fill-light mt0'>new LabelsClass()</div>
+  
+  
+
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Instance Members</div>
+    <div class="clearfix">
+  
+    <div class='border-bottom' id='LabelsClass#renderhelper'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>renderhelper(property, language, template)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  
+
+  <div class='pre p1 fill-light mt0'>renderhelper(property: any, language: any, template: any)</div>
+  
+  
+
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>property</span> <code class='quiet'>(any
+            = <code>bj</code>)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>language</span> <code class='quiet'>(any
+            = <code>ate </code>)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>template</span> <code class='quiet'>(any
+            = <code>te</code>)</code>
+	    
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='LabelsClass#render'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>render(labels, property, template, language, context)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  
+
+  <div class='pre p1 fill-light mt0'>render(labels: any, property: any, template: any, language: any, context: any): any</div>
+  
+  
+
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>labels</span> <code class='quiet'>(any)</code>
+	    the Labels Object
+
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>property</span> <code class='quiet'>(any)</code>
+	    The property for which to render the label. Used to lookup if the default label template might be overridded in the Config.
+
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>template</span> <code class='quiet'>(any)</code>
+	    If this value is set, this will be used as the template for rendering the label
+
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>language</span> <code class='quiet'>(any)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>context</span> <code class='quiet'>(any)</code>
+	    
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+    
+      <div class='py1 quiet mt1 prose-big'>Returns</div>
+      <code>any</code>:
+        promise that returns the label text (or html)
+
+      
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+</div>
+
+  
+
+  
+</section>
+
+          
+        
+          
+            <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='timeclass'>
+      TimeClass
+    </h3>
+    
+    
+  </div>
+  
+
+  
+
+  <div class='pre p1 fill-light mt0'>new TimeClass()</div>
+  
+  
+
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Instance Members</div>
+    <div class="clearfix">
+  
+    <div class='border-bottom' id='TimeClass#HelperTimeAsText'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>HelperTimeAsText(value, options)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  
+
+  <div class='pre p1 fill-light mt0'>HelperTimeAsText(value: any, options: any): any</div>
+  
+  
+
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>value</span> <code class='quiet'>(any)</code>
+	    Wikidata time value
+
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>options</span> <code class='quiet'>(any)</code>
+	    
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+    
+      <div class='py1 quiet mt1 prose-big'>Returns</div>
+      <code>any</code>:
+        Text to display to the user
+
+      
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='TimeClass#dateToJulianNumber0'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>dateToJulianNumber0(d)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  
+
+  <div class='pre p1 fill-light mt0'>dateToJulianNumber0(d: any)</div>
+  
+  
+
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>d</span> <code class='quiet'>(any)</code>
+	    
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='TimeClass#julianIntToDate0'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>julianIntToDate0(JD)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  
+
+  <div class='pre p1 fill-light mt0'>julianIntToDate0(JD: any)</div>
+  
+  
+
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>JD</span> <code class='quiet'>(any)</code>
+	    
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+</div>
+
+  
+
+  
+</section>
+
+          
+        
+          
+            <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='globecoordinateclass'>
+      GlobeCoordinateClass
+    </h3>
+    
+    
+  </div>
+  
+
+  
+
+  <div class='pre p1 fill-light mt0'>new GlobeCoordinateClass()</div>
+  
+  
+    <p>
+      Extends
+      
+        TemplateBaseClass.TemplateBaseClass
+      
+    </p>
+  
+
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Instance Members</div>
+    <div class="clearfix">
+  
+    <div class='border-bottom' id='GlobeCoordinateClass#PlotPoint'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>PlotPoint(lat, lon, mapid, options)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  
+
+  <div class='pre p1 fill-light mt0'>PlotPoint(lat: any, lon: any, mapid: any, options: any): any</div>
+  
+  
+
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>lat</span> <code class='quiet'>(any)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>lon</span> <code class='quiet'>(any)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>mapid</span> <code class='quiet'>(any)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>options</span> <code class='quiet'>(any)</code>
+	    
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+    
+      <div class='py1 quiet mt1 prose-big'>Returns</div>
+      <code>any</code>:
+        Text to display to the user
+
+      
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+</div>
+
+  
+
+  
+</section>
+
+          
+        
+          
+            <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='mapleafletclass'>
+      MapLeafletClass
+    </h3>
+    
+    
+  </div>
+  
+
+  
+
+  <div class='pre p1 fill-light mt0'>new MapLeafletClass()</div>
+  
+  
+    <p>
+      Extends
+      
+        Map.Map
+      
+    </p>
+  
+
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+            <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='templatebaseclass'>
+      TemplateBaseClass
+    </h3>
+    
+    
+  </div>
+  
+
+  
+
+  <div class='pre p1 fill-light mt0'>new TemplateBaseClass()</div>
+  
+  
+
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Instance Members</div>
+    <div class="clearfix">
+  
+    <div class='border-bottom' id='TemplateBaseClass#load'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>load(handlebars, utilclass, variant)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  
+
+  <div class='pre p1 fill-light mt0'>load(handlebars: any, utilclass: any, variant: any): any</div>
+  
+  
+
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>handlebars</span> <code class='quiet'>(any)</code>
+	    an instance of @class HandleBarsWrapper
+
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>utilclass</span> <code class='quiet'>(any
+            = <code>ss + </code>)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>variant</span> <code class='quiet'>(any
+            = <code>st=&#39; </code>)</code>
+	    
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+    
+      <div class='py1 quiet mt1 prose-big'>Returns</div>
+      <code>any</code>:
+        Promise which promises the class is ready for usage
+This function is also responsible for loading any Handlebar helpers that the template might need
+
+      
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+</div>
+
+  
+
+  
+</section>
+
+          
+        
+          
+            <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='config'>
+      Config
+    </h3>
+    
+    
+  </div>
+  
+
+  
+
+  <div class='pre p1 fill-light mt0'>new Config()</div>
+  
+  
+
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+            <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='render'>
+      render
+    </h3>
+    
+    
+  </div>
+  
+
+  
+
+  <div class='pre p1 fill-light mt0'>render(filename: any, template: any, gallery: any): any</div>
+  
+  
+
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>filename</span> <code class='quiet'>(any)</code>
+	    Name of the Image file from Commons to render. Without preceding 'Image:' or 'File:'
+
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>template</span> <code class='quiet'>(any)</code>
+	    Handlebars template to use, defaults to 'Image'
+
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>gallery</span> <code class='quiet'>(any)</code>
+	    Optional name of gallery to add to the image html in the template
+
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+    
+      <div class='py1 quiet mt1 prose-big'>Returns</div>
+      <code>any</code>:
+        Promise that resolves to the HTML for the image
+
+      
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+            <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='handlebarswrapperclass'>
+      HandleBarsWrapperClass
+    </h3>
+    
+    
+  </div>
+  
+
+  
+
+  <div class='pre p1 fill-light mt0'>new HandleBarsWrapperClass()</div>
+  
+  
+
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Instance Members</div>
+    <div class="clearfix">
+  
+    <div class='border-bottom' id='HandleBarsWrapperClass#safestring'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>safestring(text)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  
+
+  <div class='pre p1 fill-light mt0'>safestring(text: any): any</div>
+  
+  
+
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>text</span> <code class='quiet'>(any)</code>
+	    Text
+
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+    
+      <div class='py1 quiet mt1 prose-big'>Returns</div>
+      <code>any</code>:
+        safe text
+
+      
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='HandleBarsWrapperClass#encodeURIComponent'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>encodeURIComponent(text)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  
+
+  <div class='pre p1 fill-light mt0'>encodeURIComponent(text: any): any</div>
+  
+  
+
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>text</span> <code class='quiet'>(any)</code>
+	    Text that should be part of a URL
+
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+    
+      <div class='py1 quiet mt1 prose-big'>Returns</div>
+      <code>any</code>:
+        encoded text
+
+      
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='HandleBarsWrapperClass#escape'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>escape(text)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  
+
+  <div class='pre p1 fill-light mt0'>escape(text: any): any</div>
+  
+  
+
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>text</span> <code class='quiet'>(any)</code>
+	    Text
+
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+    
+      <div class='py1 quiet mt1 prose-big'>Returns</div>
+      <code>any</code>:
+        escaped text
+
+      
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='HandleBarsWrapperClass#encode'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>encode(text)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  
+
+  <div class='pre p1 fill-light mt0'>encode(text: any): any</div>
+  
+  
+
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>text</span> <code class='quiet'>(any)</code>
+	    Text
+
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+    
+      <div class='py1 quiet mt1 prose-big'>Returns</div>
+      <code>any</code>:
+        encoded text
+
+      
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='HandleBarsWrapperClass#stripHTML'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>stripHTML(html)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  
+
+  <div class='pre p1 fill-light mt0'>stripHTML(html: any): any</div>
+  
+  
+
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>html</span> <code class='quiet'>(any)</code>
+	    HTML Text
+
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+    
+      <div class='py1 quiet mt1 prose-big'>Returns</div>
+      <code>any</code>:
+        plain text
+
+      
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='HandleBarsWrapperClass#stripHTML'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>stripHTML(text, html)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  
+
+  <div class='pre p1 fill-light mt0'>stripHTML(text: any, html: any): any</div>
+  
+  
+
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>text</span> <code class='quiet'>(any)</code>
+	    Text
+
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>html</span> <code class='quiet'>(any)</code>
+	    
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+    
+      <div class='py1 quiet mt1 prose-big'>Returns</div>
+      <code>any</code>:
+        decoded text
+
+      
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='HandleBarsWrapperClass#getTemplate'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>getTemplate(name, loadjs, loadcss)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  <p>Load a handlebars template and options javascript. Makes sure
+to only load each template once.</p>
+
+
+  <div class='pre p1 fill-light mt0'>getTemplate(name: any, loadjs: any, loadcss: any): any</div>
+  
+  
+
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>name</span> <code class='quiet'>(any)</code>
+	    The name of the template (without extention)
+
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>loadjs</span> <code class='quiet'>(any)</code>
+	    Should the function try to load a Javascript file too. defaults to false
+
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>loadcss</span> <code class='quiet'>(any)</code>
+	    
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+    
+      <div class='py1 quiet mt1 prose-big'>Returns</div>
+      <code>any</code>:
+        A Promise that returns a compiled Handlebars template
+
+      
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+</div>
+
+  
+
+  
+</section>
+
+          
+        
+          
+            <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='insertimageshelper'>
+      InsertImagesHelper
+    </h3>
+    
+    
+  </div>
+  
+
+  
+
+  <div class='pre p1 fill-light mt0'>InsertImagesHelper(gallery: any)</div>
+  
+  
+
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>gallery</span> <code class='quiet'>(any)</code>
+	    css Id of the gallery
+This is a very tricky function that wraps the P373.InsertImages function. The reason for this is that
+if we  do not do this, the helper function runs in the context of the handlebars helper. so this resolves
+to the helper, not to the P373 object. That causes us not to be able to access this.handlebars which is
+necessary to load more (sub) templates. I am not proud of this, but it works.
+
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+            <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='insertimages'>
+      InsertImages
+    </h3>
+    
+    
+  </div>
+  
+
+  
+
+  <div class='pre p1 fill-light mt0'>InsertImages(gallery: any)</div>
+  
+  
+
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>gallery</span> <code class='quiet'>(any)</code>
+	    css Id of the gallery
+loads all images (only!) from a commons category and creates a gallery of them.
+
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+            <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='imagegalleryblueimp'>
+      ImageGalleryBlueimp
+    </h3>
+    
+    
+  </div>
+  
+
+  
+
+  <div class='pre p1 fill-light mt0'>new ImageGalleryBlueimp()</div>
+  
+  
+
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+            <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='mapleaflet'>
+      MapLeaflet
+    </h3>
+    
+    
+  </div>
+  
+
+  
+
+  <div class='pre p1 fill-light mt0'>new MapLeaflet()</div>
+  
+  
+
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+            <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='labels'>
+      Labels
+    </h3>
+    
+    
+  </div>
+  
+
+  
+
+  <div class='pre p1 fill-light mt0'>new Labels(handlebars: any, config: any)</div>
+  
+  
+
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>handlebars</span> <code class='quiet'>(any)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>config</span> <code class='quiet'>(any)</code>
+	    
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+      </div>
+    </div>
+  </div>
+  <script src='assets/anchor.js'></script>
+  <script src='assets/site.js'></script>
 </body>
 </html>

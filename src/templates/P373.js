@@ -1,43 +1,26 @@
-/**
- * Copyright (c) 2016, Reinier Battenberg
- * All rights reserved.
- *
- * Source code can be found at:
- * https://github.com/batje/Wikidata.Infobox
- *
- * @license GPL 3.0
- * @module WikidataHelpers
- */
 "use strict"
-import ImageGallery from '../utilclasses/ImageGallery.js'
 import WikiMediaImage from '../utilclasses/WikiMediaImage.js'
 import TemplateBaseClass from '../utilclasses/TemplateBaseClass.js';
 
-//Ok, importing lodash modules from these dynamically loaded modules doesnt work
-// will have to iterate ourselves
-//import * as forEeach from '../../../node_modules/lodash/forEach.js';
-
-var instantiated = false;
 var instance;
-/* @class that renders images
- *
+/**
+ *  Class that renders images for Commons Category.
+ *  {@link https://www.wikidata.org/wiki/Property:P373}
+ *  @extends TemplateBaseClass
  */
 class P373Class extends TemplateBaseClass.TemplateBaseClass {
   constructor() {
     super();
     this.handlebars = "empty";
-    this.ImageGallery = ImageGallery.ImageGallery();
-
     console.log("loading P373");
   }
 
-  load(handlebars) {
+  load(handlebars, utilclass = "ImageGallery", variant = "Blueimp") {
     console.log("P373 Load setting Handlebars", handlebars);
     this.handlebars = handlebars;
     this.handlebars.registerHelper('P373_InsertImages', this.InsertImagesHelper);
-    return this.ImageGallery.load(handlebars);
+    return super.load(handlebars, utilclass, variant);
   }
-
 
   /** @function InsertImagesHelper
    * @param gallery css Id of the gallery
@@ -112,6 +95,7 @@ class P373Class extends TemplateBaseClass.TemplateBaseClass {
       var target = event.target || event.srcElement,
         link = target.src ? target.parentNode : target,
         options = {
+          hidePageScrollbars: false, // in my FF when I do not click the cross to close the gallery, they scrollbars do not appear. Blueimp Gallery does not seem to have an issue queue to post this to.
           index: link,
           event: event,
           onslide: function(index, slide) {

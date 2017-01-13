@@ -74,6 +74,8 @@
     "buildcode": "rollup -c",
     "copyhandlebars": "find templates \\( -iname '*.hbs -o -iname *.css -o -iname *.js' \\) -exec cp -t examples/templates2 {} +",
     "builddocs": "node_modules/.bin/jsdoc --readme README.md src/* -r -c jsdoc.conf -d ./docs/ -t ./node_modules/ink-docstrap/template",
-    "test": "testling | faucet"
+    "test": "testling | faucet",
+    "builddoc": "node_modules/documentation/bin/documentation.js build src/** -f html -o docs/ --name \"Wikidata.Infobox\" --github --shallow --config documentation.yaml",
+    "watch-docs": "node_modules/documentation/bin/documentation.js serve src/** -f html -o docs/ --name \"Wikidata.Infobox\" --github --shallow --watch --config documentation.yaml"
   }
 }

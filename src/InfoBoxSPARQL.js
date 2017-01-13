@@ -1,15 +1,5 @@
-/**
- * Copyright (c) 2016, Reinier Battenberg
- * All rights reserved.
- *
- * Source code can be found at:
- * https://github.com/batje/Wikidata.Infobox
- *
- * @license ISC
- */
 "use strict"
 import HandleBarsWrapper from './HandleBarsWrapper/HandleBarsWrapper.js';
-/** InfoBox Class */
 class InfoBoxSPARQL {
 
   constructor() {
@@ -25,7 +15,7 @@ class InfoBoxSPARQL {
     // This is an official example from the examples on query.wikidata.org
     // The problem with this one and the next is that only attributes that refer to another
     // wikidata item are included, but no hard values like date of birth and official website
-    // 
+    //
     url = wdk.sparqlQuery(
       `#Data of Douglas Adams
 PREFIX entity: <http://www.wikidata.org/entity/>
