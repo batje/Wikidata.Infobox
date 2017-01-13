@@ -19,7 +19,6 @@
   "dependencies": {
     "bower": "^1.7.9",
     "buffer": "^4.9.1",
-    "ink-docstrap": "^1.3.0",
     "jquery-accessible-dialog-tooltip-aria": "^1.0.5",
     "jsdoc": "^3.4.0",
     "julian": "^0.1.0",
@@ -73,9 +72,8 @@
     "build": "npm run buildcode",
     "buildcode": "rollup -c",
     "copyhandlebars": "find templates \\( -iname '*.hbs -o -iname *.css -o -iname *.js' \\) -exec cp -t examples/templates2 {} +",
-    "builddocs": "node_modules/.bin/jsdoc --readme README.md src/* -r -c jsdoc.conf -d ./docs/ -t ./node_modules/ink-docstrap/template",
     "test": "testling | faucet",
-    "builddoc": "node_modules/documentation/bin/documentation.js build src/** -f html -o docs/ --name \"Wikidata.Infobox\" --github --shallow --config documentation.yaml",
+    "builddocs": "node_modules/documentation/bin/documentation.js build src/** -f html -o docs/ --name \"Wikidata.Infobox\" --github --shallow --config documentation.yaml",
     "watch-docs": "node_modules/documentation/bin/documentation.js serve src/** -f html -o docs/ --name \"Wikidata.Infobox\" --github --shallow --watch --config documentation.yaml"
   }
 }
